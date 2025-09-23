@@ -33,8 +33,8 @@ import java.util.*
 @Composable
 fun Step1Screen(
     navController: NavController,
-    viewModel: ProductFormViewModel = viewModel()
-) {
+    viewModel: ProductFormViewModel)
+{
     val formData = viewModel.formData
     val scrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
@@ -43,6 +43,8 @@ fun Step1Screen(
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
     var imageScale by remember { mutableFloatStateOf(1f) }
+    var showExitDialog by remember { mutableStateOf(false) }
+
     val animatedScale by animateFloatAsState(
         targetValue = imageScale,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
@@ -54,9 +56,7 @@ fun Step1Screen(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        viewModel.updateFormData {
-                            it.copy(purchaseDate = dateFormatter.format(Date(millis)))
-                        }
+                        viewModel.updatePurchaseDate(dateFormatter.format(Date(millis)))
                     }
                     showDatePicker = false
                 }) { Text("OK") }
@@ -69,263 +69,338 @@ fun Step1Screen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .verticalScroll(scrollState)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        // Header avec progress
-        StepHeader(
-            stepNumber = 1,
-            totalSteps = 3,
-            title = "Informations de base",
-            subtitle = "Type et détails principaux"
-        )
-
-        // Type de produit
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(20.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Category,
-                        contentDescription = null,
-                        tint = formData.selectedType.accentColor,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
                     Text(
-                        "Type de produit",
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        "Nouveau produit",
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold
                         )
                     )
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                AnimatedContent(
-                    targetState = formData.selectedType,
-                    transitionSpec = {
-                        fadeIn(animationSpec = tween(300)).togetherWith(fadeOut(animationSpec = tween(300)))
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            if (formData.productName.isNotBlank() || formData.country.isNotBlank()) {
+                                showExitDialog = true
+                            } else {
+                                navController.navigate(Screen.Home.route) {
+                                    popUpTo(Screen.Home.route) { inclusive = true }
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Retour à l'accueil"
+                        )
                     }
-                ) { type ->
-                    Image(
-                        painter = painterResource(id = type.imageRes),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(100.dp)
-                            .scale(animatedScale)
-                            .border(
-                                width = 3.dp,
-                                color = type.accentColor,
-                                shape = MaterialTheme.shapes.medium
-                            )
-                            .padding(8.dp)
-                    )
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+                .verticalScroll(scrollState)
+                .padding(paddingValues)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // Header avec progress
+            StepHeader(
+                stepNumber = 1,
+                totalSteps = 3,
+                title = "Informations de base",
+                subtitle = "Type et détails principaux"
+            )
 
-                Spacer(Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+            // Type de produit
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(20.dp)
                 ) {
-                    ProductType.entries.forEach { type ->
-                        Card(
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Category,
+                            contentDescription = null,
+                            tint = formData.selectedType.accentColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Type de produit",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    AnimatedContent(
+                        targetState = formData.selectedType,
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(300)).togetherWith(fadeOut(animationSpec = tween(300)))
+                        }
+                    ) { type ->
+                        Image(
+                            painter = painterResource(id = type.imageRes),
+                            contentDescription = null,
                             modifier = Modifier
-                                .clickable {
-                                    viewModel.updateFormData {
-                                        it.copy(selectedType = type)
-                                    }
-                                    imageScale = 0.8f
-                                    imageScale = 1.2f
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                },
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (type == formData.selectedType)
-                                    type.accentColor.copy(alpha = 0.15f)
-                                else MaterialTheme.colorScheme.surface
-                            ),
-                            border = if (type == formData.selectedType)
-                                BorderStroke(2.dp, type.accentColor)
-                            else null
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(12.dp)
+                                .size(100.dp)
+                                .scale(animatedScale)
+                                .border(
+                                    width = 3.dp,
+                                    color = type.accentColor,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                .padding(8.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        ProductType.entries.forEach { type ->
+                            Card(
+                                modifier = Modifier
+                                    .clickable {
+                                        viewModel.updateFormData {
+                                            it.copy(selectedType = type)
+                                        }
+                                        imageScale = 0.8f
+                                        imageScale = 1.2f
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (type == formData.selectedType)
+                                        type.accentColor.copy(alpha = 0.15f)
+                                    else MaterialTheme.colorScheme.surface
+                                ),
+                                border = if (type == formData.selectedType)
+                                    BorderStroke(2.dp, type.accentColor)
+                                else null
                             ) {
-                                RadioButton(
-                                    selected = type == formData.selectedType,
-                                    onClick = null,
-                                    colors = RadioButtonDefaults.colors(
-                                        selectedColor = type.accentColor
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(12.dp)
+                                ) {
+                                    RadioButton(
+                                        selected = type == formData.selectedType,
+                                        onClick = null,
+                                        colors = RadioButtonDefaults.colors(
+                                            selectedColor = type.accentColor
+                                        )
                                     )
-                                )
-                                Text(
-                                    type.displayName,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (type == formData.selectedType)
-                                        type.accentColor
-                                    else MaterialTheme.colorScheme.onSurface
-                                )
+                                    Text(
+                                        type.displayName,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = if (type == formData.selectedType)
+                                            type.accentColor
+                                        else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // Informations produit
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = formData.selectedType.accentColor,
-                        modifier = Modifier.size(24.dp)
+            // Informations produit
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = formData.selectedType.accentColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Informations produit",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    OutlinedTextField(
+                        value = formData.productName,
+                        onValueChange = viewModel::updateProductName,
+                        label = { Text("Nom du produit *") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = null,
+                                tint = formData.selectedType.accentColor
+                            )
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = formData.selectedType.accentColor,
+                            focusedLabelColor = formData.selectedType.accentColor
+                        )
                     )
-                    Spacer(Modifier.width(8.dp))
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = formData.purchaseDate,
+                        onValueChange = {},
+                        label = { Text("Date d'achat *") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = formData.selectedType.accentColor
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Sélectionner la date",
+                                    tint = formData.selectedType.accentColor
+                                )
+                            }
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true },
+                        enabled = false
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = formData.country,
+                        onValueChange = viewModel::updateCountry,
+                        label = { Text("Pays d'origine") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Public,
+                                contentDescription = null,
+                                tint = formData.selectedType.accentColor
+                            )
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = formData.selectedType.accentColor,
+                            focusedLabelColor = formData.selectedType.accentColor
+                        )
+                    )
+                }
+            }
+
+            // Bouton Suivant
+            ElevatedButton(
+                onClick = {
+                    if (viewModel.isStep1Valid()) {
+                        navController.navigate(Screen.Step2.route)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = formData.selectedType.accentColor,
+                    contentColor = Color.White
+                ),
+                enabled = viewModel.isStep1Valid()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        "Informations produit",
+                        "Suivant",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         )
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
-
-                Spacer(Modifier.height(20.dp))
-
-                OutlinedTextField(
-                    value = formData.productName,
-                    onValueChange = { newName ->
-                        viewModel.updateFormData { it.copy(productName = newName) }
-                    },
-                    label = { Text("Nom du produit *") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = null,
-                            tint = formData.selectedType.accentColor
-                        )
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = formData.selectedType.accentColor,
-                        focusedLabelColor = formData.selectedType.accentColor
-                    )
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = formData.purchaseDate,
-                    onValueChange = {},
-                    label = { Text("Date d'achat *") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = null,
-                            tint = formData.selectedType.accentColor
-                        )
-                    },
-                    trailingIcon = {
-                        IconButton(onClick = { showDatePicker = true }) {
-                            Icon(
-                                imageVector = Icons.Default.DateRange,
-                                contentDescription = "Sélectionner la date",
-                                tint = formData.selectedType.accentColor
-                            )
-                        }
-                    },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showDatePicker = true },
-                    enabled = false
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = formData.country,
-                    onValueChange = { newCountry ->
-                        viewModel.updateFormData { it.copy(country = newCountry) }
-                    },
-                    label = { Text("Pays d'origine") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Public,
-                            contentDescription = null,
-                            tint = formData.selectedType.accentColor
-                        )
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = formData.selectedType.accentColor,
-                        focusedLabelColor = formData.selectedType.accentColor
-                    )
-                )
             }
+
+            Spacer(Modifier.height(16.dp))
         }
 
-        // Bouton Suivant
-        ElevatedButton(
-            onClick = {
-                if (viewModel.isStep1Valid()) {
-                    navController.navigate(Screen.Step2.route)
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = formData.selectedType.accentColor,
-                contentColor = Color.White
-            ),
-            enabled = viewModel.isStep1Valid()
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Suivant",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold
+        // Dialog de confirmation de sortie
+        if (showExitDialog) {
+            AlertDialog(
+                onDismissRequest = { showExitDialog = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
                     )
-                )
-                Spacer(Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+                },
+                title = {
+                    Text("Quitter le formulaire ?")
+                },
+                text = {
+                    Text("Vous avez commencé à remplir le formulaire. Voulez-vous vraiment quitter ? Vos données seront perdues.")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showExitDialog = false
+                            viewModel.resetForm()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Quitter")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showExitDialog = false }) {
+                        Text("Continuer")
+                    }
+                }
+            )
         }
-
-        Spacer(Modifier.height(16.dp))
     }
 }

@@ -78,4 +78,11 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Pour la pagination
+    implementation("androidx.paging:paging-compose:3.3.6")
+    // Pour les filtres avancés
+    implementation("androidx.compose.material3:material3-window-size-class:1.3.2")
+    // Pour les animations
+    implementation("androidx.compose.animation:animation:1.9.1")
 }

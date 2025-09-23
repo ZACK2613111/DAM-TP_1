@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SummaryScreen(
     navController: NavController,
-    viewModel: ProductFormViewModel = viewModel()
+    viewModel: ProductFormViewModel
 ) {
     val formData = viewModel.formData
     val scrollState = rememberScrollState()
@@ -218,7 +218,7 @@ fun SummaryScreen(
                     }
 
                     if (formData.notes.isNotBlank()) {
-                        Divider()
+                        HorizontalDivider()
                         Text("📝 Notes :", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
                         Text(
                             formData.notes,
@@ -251,6 +251,8 @@ fun SummaryScreen(
 
                 ElevatedButton(
                     onClick = {
+                        // ✅ AJOUT DU PRODUIT À LA COLLECTION
+                        viewModel.addProduct()
                         showSuccessDialog = true
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     },
@@ -300,28 +302,29 @@ fun SummaryScreen(
                     TextButton(
                         onClick = {
                             showSuccessDialog = false
-                            viewModel.resetForm()
-                            navController.navigate(Screen.Step1.route) {
-                                popUpTo(Screen.Step1.route) { inclusive = true }
+                            // ✅ NAVIGATION VERS LA PAGE D'ACCUEIL
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
                             }
                             scope.launch {
-                                snackbarHostState.showSnackbar("✅ Produit enregistré avec succès !")
+                                snackbarHostState.showSnackbar("✅ Produit ajouté à votre collection !")
                             }
                         }
                     ) {
-                        Text("👍 Nouveau produit", color = formData.selectedType.accentColor)
+                        Text("🏠 Voir ma collection", color = formData.selectedType.accentColor)
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = {
                             showSuccessDialog = false
-                            navController.navigate(Screen.Step1.route) {
-                                popUpTo(Screen.Step1.route) { inclusive = true }
+                            // ✅ RETOUR À L'ACCUEIL AUSSI
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
                             }
                         }
                     ) {
-                        Text("🏠 Accueil")
+                        Text("👍 Parfait")
                     }
                 }
             )
