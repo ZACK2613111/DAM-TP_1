@@ -15,12 +15,11 @@ import com.example.dam_tp_1.viewmodel.ProductFormViewModel
 
 @Composable
 fun AppNavigation(navController: NavHostController = rememberNavController()) {
-    // ViewModel partagé pour toute l'application
     val sharedViewModel: ProductFormViewModel = viewModel()
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route, // ✅ COMMENCE PAR SPLASH
+        startDestination = Screen.Splash.route,
         enterTransition = {
             slideInHorizontally(
                 initialOffsetX = { 1000 },
@@ -46,22 +45,18 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             ) + fadeOut(animationSpec = tween(300))
         }
     ) {
-        // ✅ SPLASH SCREEN
         composable(Screen.Splash.route) {
             SplashScreen(navController)
         }
 
-        // ✅ AUTH SCREEN (Welcome + Login + Signup)
         composable(Screen.Auth.route) {
             AuthScreen(navController)
         }
 
-        // Page d'accueil avec la liste des produits
         composable(Screen.Home.route) {
             HomeScreen(navController, sharedViewModel)
         }
 
-        // Écran de détail du produit avec paramètre d'index
         composable(
             route = Screen.ProductDetail.route,
             arguments = listOf(navArgument("productId") {
@@ -73,22 +68,18 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             ProductDetailScreen(navController, sharedViewModel, productId)
         }
 
-        // Formulaire d'ajout - Étape 1
         composable(Screen.Step1.route) {
             Step1Screen(navController, sharedViewModel)
         }
 
-        // Formulaire d'ajout - Étape 2
         composable(Screen.Step2.route) {
             Step2Screen(navController, sharedViewModel)
         }
 
-        // Formulaire d'ajout - Étape 3
         composable(Screen.Step3.route) {
             Step3Screen(navController, sharedViewModel)
         }
 
-        // Écran de résumé avant validation
         composable(Screen.Summary.route) {
             SummaryScreen(navController, sharedViewModel)
         }
@@ -96,14 +87,14 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
 }
 
 sealed class Screen(val route: String) {
-    object Splash : Screen("splash") // ✅ AJOUTÉ
-    object Auth : Screen("auth")     // ✅ AJOUTÉ
-    object Home : Screen("home")
-    object ProductDetail : Screen("product_detail/{productId}") {
+    data object Splash : Screen("splash")
+    data object Auth : Screen("auth")
+    data object Home : Screen("home")
+    data object ProductDetail : Screen("product_detail/{productId}") {
         fun createRoute(productId: Int) = "product_detail/$productId"
     }
-    object Step1 : Screen("step1")
-    object Step2 : Screen("step2")
-    object Step3 : Screen("step3")
-    object Summary : Screen("summary")
+    data object Step1 : Screen("step1")
+    data object Step2 : Screen("step2")
+    data object Step3 : Screen("step3")
+    data object Summary : Screen("summary")
 }

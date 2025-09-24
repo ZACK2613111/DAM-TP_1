@@ -5,29 +5,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.example.dam_tp_1.model.ProductType
 import kotlinx.parcelize.Parcelize
-
-@Parcelize
 data class ProductFormData(
-    // Page 1 - Informations de base
-    var selectedType: ProductType = ProductType.Consumable,
-    var productName: String = "",
-    var purchaseDate: String = "",
-    var country: String = "",
-
-    // Page 2 - Apparence & Détails
-    var selectedColorArgb: Int = Color(0xFF6750A4).toArgb(),
-    var productSize: String = "",
-    var brand: String = "",
-    var price: String = "",
-    var condition: ProductCondition = ProductCondition.New,
-
-    // Page 3 - Préférences & Validation
-    var isFavorite: Boolean = false,
-    var notes: String = "",
-    var rating: Int = 5,
-    var hasWarranty: Boolean = false,
-    var warrantyDuration: String = ""
-) : Parcelable
+    val selectedType: ProductType = ProductType.Durable,
+    val productName: String = "",
+    val purchaseDate: String = "",
+    val country: String = "",
+    val brand: String = "",
+    val price: String = "",
+    val productSize: String = "",
+    val selectedColorArgb: Int = Color.Blue.toArgb(),
+    val condition: ProductCondition = ProductCondition.New,
+    val isFavorite: Boolean = false,
+    val rating: Int = 0,
+    val notes: String = "",
+    val hasWarranty: Boolean = false,
+    val warrantyDuration: String = "",
+    val customImageUri: String? = null // ✅ NOUVEAU - Image personnalisée
+)
 
 @Parcelize
 enum class ProductCondition(val displayName: String) : Parcelable {

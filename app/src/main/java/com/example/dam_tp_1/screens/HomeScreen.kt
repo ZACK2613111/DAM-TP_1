@@ -43,9 +43,7 @@ fun HomeScreen(
     var showUserMenu by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var currentPage by remember { mutableStateOf(0) }
-
-    // Pagination
-    val itemsPerPage = 10
+    val itemsPerPage = 3
     val totalPages = (filteredProducts.size + itemsPerPage - 1) / itemsPerPage
     val paginatedProducts = filteredProducts.drop(currentPage * itemsPerPage).take(itemsPerPage)
 
@@ -316,7 +314,6 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
-                // Chips de filtres
                 FilterChips(
                     filterState = searchFilterViewModel.filterState,
                     availableCountries = availableCountries,
@@ -333,7 +330,6 @@ fun HomeScreen(
                 )
 
                 if (filteredProducts.isEmpty()) {
-                    // État vide après filtrage
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -424,14 +420,12 @@ fun HomeScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Header avec statistiques (si pas de filtres actifs)
                         if (searchFilterViewModel.getActiveFiltersCount() == 0) {
                             item {
                                 StatsHeader(allProducts)
                             }
                         }
 
-                        // Liste des produits paginés
                         itemsIndexed(
                             items = paginatedProducts,
                             key = { index, product -> "${product.productName}_${product.brand}_$index" }
@@ -449,10 +443,8 @@ fun HomeScreen(
                             )
                         }
 
-                        // Contrôles de pagination
                         if (totalPages > 1) {
                             item {
-                                // ✅ VERSION SIMPLE INTÉGRÉE
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = MaterialTheme.shapes.large,

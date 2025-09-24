@@ -8,7 +8,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.dam_tp_1.R
 
-// Police par défaut Material3 (typographie standard)
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = FontFamily.Default,

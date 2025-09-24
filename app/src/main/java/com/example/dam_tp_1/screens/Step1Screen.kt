@@ -18,11 +18,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.dam_tp_1.components.StepHeader
+import com.example.dam_tp_1.components.ProductImagePicker
 import com.example.dam_tp_1.model.ProductType
 import com.example.dam_tp_1.navigation.Screen
 import com.example.dam_tp_1.viewmodel.ProductFormViewModel
@@ -33,8 +34,8 @@ import java.util.*
 @Composable
 fun Step1Screen(
     navController: NavController,
-    viewModel: ProductFormViewModel)
-{
+    viewModel: ProductFormViewModel
+) {
     val formData = viewModel.formData
     val scrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
@@ -50,6 +51,7 @@ fun Step1Screen(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
     )
 
+    // DatePicker Dialog
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -83,7 +85,9 @@ fun Step1Screen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            if (formData.productName.isNotBlank() || formData.country.isNotBlank()) {
+                            if (formData.productName.isNotBlank() ||
+                                formData.country.isNotBlank() ||
+                                formData.customImageUri != null) {
                                 showExitDialog = true
                             } else {
                                 navController.navigate(Screen.Home.route) {
@@ -121,7 +125,57 @@ fun Step1Screen(
                 subtitle = "Type et détails principaux"
             )
 
-            // Type de produit
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Image,
+                            contentDescription = null,
+                            tint = formData.selectedType.accentColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Image du produit",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    ProductImagePicker(
+                        selectedType = formData.selectedType,
+                        customImageUri = formData.customImageUri,
+                        onImageSelected = { uri ->
+                            viewModel.updateCustomImage(uri)
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        "Optionnel - Personnalisez l'image de votre produit",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            // Type de produit - Section existante modifiée
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
@@ -152,29 +206,71 @@ fun Step1Screen(
 
                     Spacer(Modifier.height(16.dp))
 
+                    // ✅ Image preview qui montre l'image personnalisée ou par défaut
                     AnimatedContent(
-                        targetState = formData.selectedType,
+                        targetState = formData.selectedType to formData.customImageUri,
                         transitionSpec = {
                             fadeIn(animationSpec = tween(300)).togetherWith(fadeOut(animationSpec = tween(300)))
                         }
-                    ) { type ->
-                        Image(
-                            painter = painterResource(id = type.imageRes),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(100.dp)
-                                .scale(animatedScale)
-                                .border(
-                                    width = 3.dp,
-                                    color = type.accentColor,
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                                .padding(8.dp)
-                        )
+                    ) { (type, customUri) ->
+                        Card(
+                            modifier = Modifier.size(100.dp),
+                            shape = MaterialTheme.shapes.medium,
+                            colors = CardDefaults.cardColors(
+                                containerColor = type.accentColor.copy(alpha = 0.1f)
+                            ),
+                            border = BorderStroke(3.dp, type.accentColor)
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                if (customUri != null) {
+                                    // Indicateur image personnalisée
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(
+                                                type.accentColor.copy(alpha = 0.2f),
+                                                MaterialTheme.shapes.medium
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Icon(
+                                                imageVector = Icons.Default.PhotoCamera,
+                                                contentDescription = "Image personnalisée",
+                                                tint = type.accentColor,
+                                                modifier = Modifier.size(32.dp)
+                                            )
+                                            Spacer(Modifier.height(4.dp))
+                                            Text(
+                                                "Personnalisée",
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    fontWeight = FontWeight.Medium
+                                                ),
+                                                color = type.accentColor
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    // Image par défaut
+                                    Image(
+                                        painter = painterResource(id = type.imageRes),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .scale(animatedScale)
+                                            .padding(8.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     Spacer(Modifier.height(16.dp))
 
+                    // Sélecteurs de type
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -224,7 +320,7 @@ fun Step1Screen(
                 }
             }
 
-            // Informations produit
+            // Informations produit - Section existante
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
@@ -297,7 +393,11 @@ fun Step1Screen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { showDatePicker = true },
-                        enabled = false
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledBorderColor = formData.selectedType.accentColor.copy(alpha = 0.5f),
+                            disabledLabelColor = formData.selectedType.accentColor.copy(alpha = 0.7f)
+                        )
                     )
 
                     Spacer(Modifier.height(16.dp))
@@ -376,7 +476,36 @@ fun Step1Screen(
                     Text("Quitter le formulaire ?")
                 },
                 text = {
-                    Text("Vous avez commencé à remplir le formulaire. Voulez-vous vraiment quitter ? Vos données seront perdues.")
+                    Column {
+                        Text("Vous avez commencé à remplir le formulaire. Voulez-vous vraiment quitter ?")
+
+                        if (formData.customImageUri != null) {
+                            Spacer(Modifier.height(8.dp))
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Photo,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        "Votre image personnalisée sera perdue",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
                 },
                 confirmButton = {
                     TextButton(

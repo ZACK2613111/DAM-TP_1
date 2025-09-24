@@ -13,23 +13,21 @@ import android.util.Log
 
 class ProductFormViewModel : ViewModel() {
 
-    // État du formulaire
     var formData by mutableStateOf(ProductFormData())
         private set
 
-    // Liste des produits ajoutés avec gestion des IDs
+    fun updateCustomImage(imageUri: String?) {
+        formData = formData.copy(customImageUri = imageUri)
+    }
     var productsList by mutableStateOf(listOf<ProductFormData>())
         private set
 
-    // Compteur pour les IDs uniques
     private var nextId = 0
 
-    // Fonction pour mettre à jour les données du formulaire
     fun updateFormData(update: (ProductFormData) -> ProductFormData) {
         formData = update(formData)
     }
 
-    // Ajouter un produit à la liste
     fun addProduct() {
         val newProduct = formData.copy()
         productsList = productsList + newProduct

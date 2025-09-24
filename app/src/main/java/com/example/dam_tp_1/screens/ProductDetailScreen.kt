@@ -36,7 +36,6 @@ fun ProductDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     if (product == null) {
-        // Produit non trouvé
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
