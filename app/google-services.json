@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "654129329823",
+    "project_id": "dam-tp",
+    "storage_bucket": "dam-tp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:654129329823:android:724b9f30e1ec81471c94aa",
+        "android_client_info": {
+          "package_name": "com.example.dam_tp_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDF9vfoxZyu6rttvZLCaJNcjidOocKnDZY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
