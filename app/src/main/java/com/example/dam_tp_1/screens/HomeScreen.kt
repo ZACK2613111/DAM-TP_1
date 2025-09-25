@@ -21,22 +21,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dam_tp_1.components.*
 import com.example.dam_tp_1.data.ProductFormData
 import com.example.dam_tp_1.navigation.Screen
 import com.example.dam_tp_1.viewmodel.ProductFormViewModel
 import com.example.dam_tp_1.viewmodel.SearchFilterViewModel
+import com.example.dam_tp_1.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: ProductFormViewModel
+    viewModel: ProductFormViewModel,
+    authViewModel: AuthViewModel = viewModel() // ✅ Add AuthViewModel parameter
 ) {
     val searchFilterViewModel: SearchFilterViewModel = viewModel()
     val allProducts = viewModel.productsList
     val filteredProducts = searchFilterViewModel.getFilteredProducts(allProducts)
     val availableCountries = searchFilterViewModel.getAvailableCountries(allProducts)
+
+    // ✅ Observer le profil utilisateur
+    val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
 
     val haptic = LocalHapticFeedback.current
     var showDeleteDialog by remember { mutableStateOf<ProductFormData?>(null) }
@@ -128,13 +134,14 @@ fun HomeScreen(
                                     Spacer(Modifier.width(12.dp))
                                     Column {
                                         Text(
-                                            "John Doe",
+                                            // ✅ Utiliser les données du profil ou valeurs par défaut
+                                            userProfile?.let { "${it.prenom} ${it.nom}" } ?: "Utilisateur",
                                             style = MaterialTheme.typography.titleMedium.copy(
                                                 fontWeight = FontWeight.Bold
                                             )
                                         )
                                         Text(
-                                            "john.doe@example.com",
+                                            userProfile?.email ?: "email@example.com",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                         )
@@ -314,6 +321,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
+                // Filtres
                 FilterChips(
                     filterState = searchFilterViewModel.filterState,
                     availableCountries = availableCountries,
@@ -536,13 +544,17 @@ fun HomeScreen(
             )
         }
 
-        // Dialog de déconnexion
+        // ✅ Dialog de déconnexion MODIFIÉ
         if (showLogoutDialog) {
             LogoutDialog(
                 showDialog = showLogoutDialog,
                 onDismiss = { showLogoutDialog = false },
                 onConfirm = {
                     showLogoutDialog = false
+
+                    // ✅ APPELER LA MÉTHODE DE DÉCONNEXION DU VIEWMODEL
+                    authViewModel.signOut()
+
                     // Navigation vers l'écran d'auth
                     navController.navigate(Screen.Auth.route) {
                         popUpTo(Screen.Home.route) {
@@ -938,4 +950,3 @@ private fun LogoutDialog(
         )
     }
 }
-

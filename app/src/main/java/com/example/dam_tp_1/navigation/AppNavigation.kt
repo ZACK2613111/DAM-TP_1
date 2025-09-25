@@ -11,15 +11,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.dam_tp_1.screens.*
+import com.example.dam_tp_1.auth.AuthScreen // ✅ Import depuis le package auth
 import com.example.dam_tp_1.viewmodel.ProductFormViewModel
+import com.example.dam_tp_1.viewmodel.AuthViewModel
 
 @Composable
 fun AppNavigation(navController: NavHostController = rememberNavController()) {
     val sharedViewModel: ProductFormViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel() // ✅ ViewModel partagé
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route,
+        startDestination = Screen.Auth.route, // ✅ Commence par Splash
         enterTransition = {
             slideInHorizontally(
                 initialOffsetX = { 1000 },
@@ -46,15 +49,15 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         }
     ) {
         composable(Screen.Splash.route) {
-            SplashScreen(navController)
+            SplashScreen(navController, authViewModel) // ✅ Passe le ViewModel
         }
 
         composable(Screen.Auth.route) {
-            AuthScreen(navController)
+            AuthScreen(navController, authViewModel) // ✅ Utilise le même ViewModel
         }
 
         composable(Screen.Home.route) {
-            HomeScreen(navController, sharedViewModel)
+            HomeScreen(navController, sharedViewModel, authViewModel) // ✅ Pass AuthViewModel
         }
 
         composable(

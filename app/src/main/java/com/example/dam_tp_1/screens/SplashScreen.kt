@@ -20,16 +20,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dam_tp_1.navigation.Screen
 import com.example.dam_tp_1.ui.theme.*
+import com.example.dam_tp_1.viewmodel.AuthViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavController) {
+fun SplashScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     val haptic = LocalHapticFeedback.current
     var isVisible by remember { mutableStateOf(false) }
     var showProgressBar by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0f) }
+    var currentStep by remember { mutableStateOf("Initialisation...") }
 
     // Animations
     val scale by animateFloatAsState(
@@ -37,35 +43,54 @@ fun SplashScreen(navController: NavController) {
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessLow
-        )
+        ),
+        label = "scale"
     )
 
     val alpha by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(1000)
+        animationSpec = tween(1000),
+        label = "alpha"
     )
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = tween(2000, easing = EaseInOutCubic)
+        animationSpec = tween(2000, easing = EaseInOutCubic),
+        label = "progress"
     )
 
-    // Launch effects
+    // Launch effects - MODIFIED to go directly to Auth
     LaunchedEffect(Unit) {
         delay(300)
         isVisible = true
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
 
-        delay(1500)
+        delay(800)
         showProgressBar = true
 
-        // Simulate loading
-        for (i in 0..100 step 5) {
-            progress = i / 100f
-            delay(30)
+        // Simulation des étapes de chargement
+        val steps = listOf(
+            "Connexion à Firebase..." to 0.2f,
+            "Préparation de l'interface..." to 0.5f,
+            "Chargement des composants..." to 0.8f,
+            "Finalisation..." to 1.0f
+        )
+
+        for ((step, targetProgress) in steps) {
+            currentStep = step
+
+            // Animation progressive
+            while (progress < targetProgress) {
+                progress += 0.02f
+                delay(50)
+            }
+            delay(300)
         }
 
         delay(500)
+
+        // ✅ NAVIGATION DIRECTE VERS AUTH (pas de vérification d'utilisateur)
+        println("🔍 DEBUG: Navigation directe vers Auth")
         navController.navigate(Screen.Auth.route) {
             popUpTo(Screen.Splash.route) { inclusive = true }
         }
@@ -151,7 +176,7 @@ fun SplashScreen(navController: NavController) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     LinearProgressIndicator(
-                        progress = animatedProgress,
+                        progress = { animatedProgress },
                         modifier = Modifier.width(200.dp),
                         color = Color.White,
                         trackColor = Color.White.copy(alpha = 0.3f)
@@ -160,9 +185,17 @@ fun SplashScreen(navController: NavController) {
                     Spacer(Modifier.height(16.dp))
 
                     Text(
-                        text = "Chargement... ${(animatedProgress * 100).toInt()}%",
+                        text = currentStep,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.8f)
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        text = "${(animatedProgress * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.6f)
                     )
                 }
             }
