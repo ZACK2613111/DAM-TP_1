@@ -302,7 +302,6 @@ fun SummaryScreen(
                     TextButton(
                         onClick = {
                             showSuccessDialog = false
-                            // ✅ NAVIGATION VERS LA PAGE D'ACCUEIL
                             navController.navigate(Screen.Home.route) {
                                 popUpTo(Screen.Home.route) { inclusive = true }
                             }

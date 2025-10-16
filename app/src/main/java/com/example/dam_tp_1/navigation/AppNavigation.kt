@@ -11,18 +11,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.dam_tp_1.screens.*
-import com.example.dam_tp_1.auth.AuthScreen // ✅ Import depuis le package auth
+import com.example.dam_tp_1.auth.AuthScreen
 import com.example.dam_tp_1.viewmodel.ProductFormViewModel
 import com.example.dam_tp_1.viewmodel.AuthViewModel
 
 @Composable
 fun AppNavigation(navController: NavHostController = rememberNavController()) {
     val sharedViewModel: ProductFormViewModel = viewModel()
-    val authViewModel: AuthViewModel = viewModel() // ✅ ViewModel partagé
+    val authViewModel: AuthViewModel = viewModel()
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Auth.route, // ✅ Commence par Splash
+        startDestination = Screen.Splash.route, // ✅ Commence par Splash
         enterTransition = {
             slideInHorizontally(
                 initialOffsetX = { 1000 },
@@ -48,16 +48,22 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             ) + fadeOut(animationSpec = tween(300))
         }
     ) {
+        // ✅ SPLASH SCREEN
         composable(Screen.Splash.route) {
-            SplashScreen(navController, authViewModel) // ✅ Passe le ViewModel
+            SplashScreen(navController)
+        }
+
+        // ✅ ONBOARDING SCREEN (NOUVEAU!)
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(navController)
         }
 
         composable(Screen.Auth.route) {
-            AuthScreen(navController, authViewModel) // ✅ Utilise le même ViewModel
+            AuthScreen(navController, authViewModel)
         }
 
         composable(Screen.Home.route) {
-            HomeScreen(navController, sharedViewModel, authViewModel) // ✅ Pass AuthViewModel
+            HomeScreen(navController, sharedViewModel, authViewModel)
         }
 
         composable(
@@ -91,6 +97,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
 
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
+    data object Onboarding : Screen("onboarding") // ✅ NOUVEAU!
     data object Auth : Screen("auth")
     data object Home : Screen("home")
     data object ProductDetail : Screen("product_detail/{productId}") {
