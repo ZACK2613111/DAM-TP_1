@@ -94,7 +94,6 @@ fun AuthScreen(
             AuthTab.Signup -> SignupContent(
                 viewModel = authViewModel,
                 onSignup = {
-                    // Après inscription, passer à l'écran de vérification
                     currentTab = AuthTab.EmailVerification
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 },
@@ -202,6 +201,7 @@ fun AuthScreen(
         }
     }
 }
+
 
 enum class AuthTab {
     Welcome, Login, Signup, EmailVerification // ✅ Ajout du nouvel état

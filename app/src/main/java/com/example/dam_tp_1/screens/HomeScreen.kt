@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.dam_tp_1.components.*
@@ -21,13 +22,16 @@ import com.example.dam_tp_1.viewmodel.*
 fun HomeScreen(
     navController: NavController,
     viewModel: ProductFormViewModel,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
     val searchFilterViewModel: SearchFilterViewModel = viewModel()
     val allProducts = viewModel.productsList
     val filteredProducts = searchFilterViewModel.getFilteredProducts(allProducts)
     val availableCountries = searchFilterViewModel.getAvailableCountries(allProducts)
     val haptic = LocalHapticFeedback.current
+
+    // ✅ Observer les données utilisateur
+    val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
 
     var showDeleteDialog by remember { mutableStateOf<ProductFormData?>(null) }
     var showUserMenu by remember { mutableStateOf(false) }
@@ -47,12 +51,14 @@ fun HomeScreen(
                     onUserMenuClick = { showUserMenu = true }
                 )
 
+                // ✅ Passer les vraies données utilisateur
                 UserProfileMenu(
-                    userName = "Utilisateur",
-                    userEmail = "email@example.com",
+                    userName = currentUser?.displayName ?: "Utilisateur",
+                    userEmail = currentUser?.email ?: "email@example.com",
                     expanded = showUserMenu,
                     onDismiss = { showUserMenu = false },
                     onLogout = {
+                        showUserMenu = false
                         showLogoutDialog = true
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
@@ -144,7 +150,7 @@ fun HomeScreen(
             }
         }
 
-        // Dialogs
+        // Delete Dialog
         showDeleteDialog?.let { product ->
             DeleteProductDialog(
                 product = product,
@@ -160,13 +166,16 @@ fun HomeScreen(
             )
         }
 
+        // ✅ Logout Dialog
         if (showLogoutDialog) {
             LogoutDialog(
+                userName = currentUser?.displayName ?: "Utilisateur",
                 onConfirm = {
                     showLogoutDialog = false
-                    authViewModel.signOut()
-                    navController.navigate(Screen.Auth.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
+                    authViewModel.logout {
+                        navController.navigate(Screen.Auth.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },

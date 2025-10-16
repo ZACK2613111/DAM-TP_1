@@ -476,4 +476,26 @@ class AuthViewModel : ViewModel() {
         _authResult.value = AuthResult.Idle
         clearError()
     }
+
+    // Dans AuthViewModel.kt
+    fun logout(onLogoutComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                auth.signOut()
+
+                // Reset states
+                _currentUser.value = null
+                _isEmailVerified.value = false
+                _errorMessage.value = null
+
+                onLogoutComplete()
+            } catch (e: Exception) {
+                _errorMessage.value = "Erreur lors de la déconnexion: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
 }
