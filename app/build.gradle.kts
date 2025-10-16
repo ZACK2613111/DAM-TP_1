@@ -105,5 +105,10 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("androidx.compose.foundation:foundation:1.7.5")
+    // REST Countries API
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
 }
