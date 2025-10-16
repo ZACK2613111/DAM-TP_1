@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -24,37 +27,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.dam_tp_1.api.CountriesApiService
 import com.example.dam_tp_1.components.StepHeader
 import com.example.dam_tp_1.components.ProductImagePicker
+import com.example.dam_tp_1.data.Country
+import com.example.dam_tp_1.model.ProductType
 import com.example.dam_tp_1.navigation.Screen
 import com.example.dam_tp_1.ui.theme.*
 import com.example.dam_tp_1.viewmodel.ProductFormViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-
-// === HELPER FUNCTION: Countries with Flags ===
-private fun getCountryFlags() = mapOf(
-    "France" to "🇫🇷",
-    "Algérie" to "🇩🇿",
-    "Maroc" to "🇲🇦",
-    "Tunisie" to "🇹🇳",
-    "Canada" to "🇨🇦",
-    "États-Unis" to "🇺🇸",
-    "Royaume-Uni" to "🇬🇧",
-    "Allemagne" to "🇩🇪",
-    "Italie" to "🇮🇹",
-    "Espagne" to "🇪🇸",
-    "Belgique" to "🇧🇪",
-    "Suisse" to "🇨🇭",
-    "Portugal" to "🇵🇹",
-    "Pays-Bas" to "🇳🇱",
-    "Japon" to "🇯🇵",
-    "Chine" to "🇨🇳",
-    "Corée du Sud" to "🇰🇷",
-    "Brésil" to "🇧🇷",
-    "Mexique" to "🇲🇽",
-    "Turquie" to "🇹🇷"
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,14 +50,35 @@ fun Step1Screen(
     val scrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
     val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.FRANCE) }
+    val scope = rememberCoroutineScope()
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showCountryPicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
     var showExitDialog by remember { mutableStateOf(false) }
 
-    val countryFlags = remember { getCountryFlags() }
-    val selectedFlag = countryFlags[formData.country] ?: "🌍"
+    // API State
+    var countries by remember { mutableStateOf<List<Country>>(emptyList()) }
+    var isLoadingCountries by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Load countries from API
+    LaunchedEffect(Unit) {
+        isLoadingCountries = true
+        try {
+            val api = CountriesApiService.create()
+            countries = api.getAllCountries().sortedBy { it.name.common }
+        } catch (e: Exception) {
+            // Fallback silently
+        } finally {
+            isLoadingCountries = false
+        }
+    }
+
+    val filteredCountries = remember(countries, searchQuery) {
+        if (searchQuery.isEmpty()) countries
+        else countries.filter { it.name.common.contains(searchQuery, ignoreCase = true) }
+    }
 
     // DatePicker Dialog
     if (showDatePicker) {
@@ -156,7 +161,6 @@ fun Step1Screen(
                     .padding(top = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // === STEP HEADER ===
                 StepHeader(
                     stepNumber = 1,
                     totalSteps = 3,
@@ -164,8 +168,155 @@ fun Step1Screen(
                     subtitle = "Type et détails principaux"
                 )
 
-                // === TYPE DE PRODUIT (SECTION SUPPRIMÉE) ===
-                // REMOVED - Plus de section Type de produit
+                // === IMAGE PICKER ===
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color.Gray.copy(0.1f))
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(formData.selectedType.accentColor.copy(0.15f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Image, null, tint = formData.selectedType.accentColor, modifier = Modifier.size(22.dp))
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                "Image du produit",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFF1C1B1F)
+                            )
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+
+                        ProductImagePicker(
+                            selectedType = formData.selectedType,
+                            customImageUri = formData.customImageUri,
+                            onImageSelected = { uri ->
+                                viewModel.updateCustomImage(uri)
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        Text(
+                            "Optionnel - Personnalisez l'image",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                // === TYPE DE PRODUIT ===
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color.Gray.copy(0.1f))
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(formData.selectedType.accentColor.copy(0.15f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Category, null, tint = formData.selectedType.accentColor, modifier = Modifier.size(22.dp))
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                "Type de produit",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFF1C1B1F)
+                            )
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            ProductType.entries.forEach { type ->
+                                Card(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            viewModel.updateFormData { it.copy(selectedType = type) }
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        },
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (type == formData.selectedType)
+                                            type.accentColor.copy(0.15f)
+                                        else
+                                            Color.White
+                                    ),
+                                    border = BorderStroke(
+                                        2.dp,
+                                        if (type == formData.selectedType) type.accentColor else Color.Gray.copy(0.2f)
+                                    )
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .background(
+                                                    if (type == formData.selectedType)
+                                                        type.accentColor.copy(0.2f)
+                                                    else
+                                                        Color.Gray.copy(0.1f),
+                                                    CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                when(type) {
+                                                    ProductType.Consumable -> Icons.Default.ShoppingCart
+                                                    ProductType.Durable -> Icons.Default.Watch
+                                                    ProductType.Other -> Icons.Default.MoreHoriz
+                                                },
+                                                null,
+                                                tint = if (type == formData.selectedType) type.accentColor else Color.Gray,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                        Spacer(Modifier.height(8.dp))
+                                        Text(
+                                            type.displayName,
+                                            style = MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight = if (type == formData.selectedType) FontWeight.Bold else FontWeight.Medium
+                                            ),
+                                            color = if (type == formData.selectedType) type.accentColor else Color.Gray,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // === INFORMATIONS PRODUIT ===
                 Card(
@@ -182,10 +333,10 @@ fun Step1Screen(
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .background(Primary.copy(0.15f), CircleShape),
+                                    .background(formData.selectedType.accentColor.copy(0.15f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.Info, null, tint = Primary, modifier = Modifier.size(22.dp))
+                                Icon(Icons.Default.Info, null, tint = formData.selectedType.accentColor, modifier = Modifier.size(22.dp))
                             }
                             Spacer(Modifier.width(12.dp))
                             Text(
@@ -197,35 +348,33 @@ fun Step1Screen(
 
                         Spacer(Modifier.height(20.dp))
 
-                        // Nom du produit
                         OutlinedTextField(
                             value = formData.productName,
                             onValueChange = viewModel::updateProductName,
                             label = { Text("Nom du produit *") },
-                            leadingIcon = { Icon(Icons.Default.ShoppingCart, null, tint = Primary) },
+                            leadingIcon = { Icon(Icons.Default.ShoppingCart, null, tint = formData.selectedType.accentColor) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Primary,
-                                focusedLabelColor = Primary,
+                                focusedBorderColor = formData.selectedType.accentColor,
+                                focusedLabelColor = formData.selectedType.accentColor,
                                 unfocusedBorderColor = Color.LightGray.copy(0.5f),
-                                cursorColor = Primary,
-                                focusedContainerColor = Primary.copy(0.03f)
+                                cursorColor = formData.selectedType.accentColor,
+                                focusedContainerColor = formData.selectedType.accentColor.copy(0.03f)
                             )
                         )
 
                         Spacer(Modifier.height(16.dp))
 
-                        // Date d'achat
                         OutlinedTextField(
                             value = formData.purchaseDate,
                             onValueChange = {},
                             label = { Text("Date d'achat *") },
-                            leadingIcon = { Icon(Icons.Default.CalendarToday, null, tint = Primary) },
+                            leadingIcon = { Icon(Icons.Default.CalendarToday, null, tint = formData.selectedType.accentColor) },
                             trailingIcon = {
                                 IconButton(onClick = { showDatePicker = true }) {
-                                    Icon(Icons.Default.DateRange, null, tint = Primary)
+                                    Icon(Icons.Default.DateRange, null, tint = formData.selectedType.accentColor)
                                 }
                             },
                             singleLine = true,
@@ -233,17 +382,17 @@ fun Step1Screen(
                             enabled = false,
                             shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                disabledBorderColor = Primary.copy(0.5f),
-                                disabledLabelColor = Primary.copy(0.7f),
-                                disabledLeadingIconColor = Primary.copy(0.7f),
-                                disabledTrailingIconColor = Primary,
+                                disabledBorderColor = formData.selectedType.accentColor.copy(0.5f),
+                                disabledLabelColor = formData.selectedType.accentColor.copy(0.7f),
+                                disabledLeadingIconColor = formData.selectedType.accentColor.copy(0.7f),
+                                disabledTrailingIconColor = formData.selectedType.accentColor,
                                 disabledTextColor = Color(0xFF1C1B1F)
                             )
                         )
 
                         Spacer(Modifier.height(16.dp))
 
-                        // === COUNTRY PICKER WITH FLAGS ===
+                        // === COUNTRY PICKER ===
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -251,13 +400,13 @@ fun Step1Screen(
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (formData.country.isNotBlank())
-                                    Primary.copy(0.05f)
+                                    formData.selectedType.accentColor.copy(0.05f)
                                 else
                                     Color.White
                             ),
                             border = BorderStroke(
                                 1.5.dp,
-                                if (formData.country.isNotBlank()) Primary else Color.LightGray.copy(0.5f)
+                                if (formData.country.isNotBlank()) formData.selectedType.accentColor else Color.LightGray.copy(0.5f)
                             )
                         ) {
                             Row(
@@ -266,13 +415,25 @@ fun Step1Screen(
                                     .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(Primary.copy(0.15f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(selectedFlag, fontSize = 20.sp)
+                                val selectedCountry = countries.find { it.name.common == formData.country }
+
+                                if (selectedCountry != null) {
+                                    AsyncImage(
+                                        model = selectedCountry.flags.png,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .background(formData.selectedType.accentColor.copy(0.15f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.Language, null, tint = formData.selectedType.accentColor, modifier = Modifier.size(24.dp))
+                                    }
                                 }
 
                                 Spacer(Modifier.width(12.dp))
@@ -281,7 +442,7 @@ fun Step1Screen(
                                     Text(
                                         "Pays d'origine",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = if (formData.country.isNotBlank()) Primary else Color.Gray
+                                        color = if (formData.country.isNotBlank()) formData.selectedType.accentColor else Color.Gray
                                     )
                                     if (formData.country.isNotBlank()) {
                                         Spacer(Modifier.height(2.dp))
@@ -303,12 +464,11 @@ fun Step1Screen(
                                 Icon(
                                     if (showCountryPicker) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                     null,
-                                    tint = Primary
+                                    tint = formData.selectedType.accentColor
                                 )
                             }
                         }
 
-                        // Country Picker Menu
                         AnimatedVisibility(
                             visible = showCountryPicker,
                             enter = slideInVertically() + expandVertically() + fadeIn(),
@@ -319,42 +479,92 @@ fun Step1Screen(
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.Gray.copy(0.05f))
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                border = BorderStroke(1.dp, Color.Gray.copy(0.1f))
                             ) {
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(max = 300.dp)
-                                        .verticalScroll(rememberScrollState())
-                                        .padding(vertical = 8.dp)
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    countryFlags.forEach { (country, flag) ->
-                                        Row(
+                                    // Search bar
+                                    OutlinedTextField(
+                                        value = searchQuery,
+                                        onValueChange = { searchQuery = it },
+                                        placeholder = { Text("Rechercher un pays...") },
+                                        leadingIcon = { Icon(Icons.Default.Search, null, tint = formData.selectedType.accentColor) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        singleLine = true,
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = formData.selectedType.accentColor,
+                                            cursorColor = formData.selectedType.accentColor
+                                        )
+                                    )
+
+                                    if (isLoadingCountries) {
+                                        Box(
+                                            Modifier.fillMaxWidth().height(200.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(color = formData.selectedType.accentColor)
+                                        }
+                                    } else {
+                                        LazyColumn(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .clickable {
-                                                    viewModel.updateCountry(country)
-                                                    showCountryPicker = false
-                                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                }
-                                                .background(
-                                                    if (country == formData.country) Primary.copy(0.1f) else Color.Transparent
-                                                )
-                                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                                .heightIn(max = 300.dp)
                                         ) {
-                                            Text(flag, fontSize = 24.sp, modifier = Modifier.size(32.dp))
-                                            Spacer(Modifier.width(16.dp))
-                                            Text(
-                                                country,
-                                                style = MaterialTheme.typography.bodyLarge.copy(
-                                                    fontWeight = if (country == formData.country) FontWeight.Bold else FontWeight.Normal
-                                                ),
-                                                color = if (country == formData.country) Primary else Color(0xFF1C1B1F)
-                                            )
-                                            if (country == formData.country) {
-                                                Spacer(Modifier.weight(1f))
-                                                Icon(Icons.Default.Check, null, tint = Primary, modifier = Modifier.size(20.dp))
+                                            items(filteredCountries) { country ->
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable {
+                                                            viewModel.updateCountry(country.name.common)
+                                                            showCountryPicker = false
+                                                            searchQuery = ""
+                                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                        }
+                                                        .background(
+                                                            if (country.name.common == formData.country)
+                                                                formData.selectedType.accentColor.copy(0.1f)
+                                                            else
+                                                                Color.Transparent
+                                                        )
+                                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    AsyncImage(
+                                                        model = country.flags.png,
+                                                        contentDescription = null,
+                                                        modifier = Modifier
+                                                            .size(32.dp)
+                                                            .clip(RoundedCornerShape(4.dp))
+                                                    )
+                                                    Spacer(Modifier.width(16.dp))
+                                                    Text(
+                                                        country.name.common,
+                                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                                            fontWeight = if (country.name.common == formData.country)
+                                                                FontWeight.Bold
+                                                            else
+                                                                FontWeight.Normal
+                                                        ),
+                                                        color = if (country.name.common == formData.country)
+                                                            formData.selectedType.accentColor
+                                                        else
+                                                            Color(0xFF1C1B1F),
+                                                        modifier = Modifier.weight(1f)
+                                                    )
+                                                    if (country.name.common == formData.country) {
+                                                        Icon(
+                                                            Icons.Default.Check,
+                                                            null,
+                                                            tint = formData.selectedType.accentColor,
+                                                            modifier = Modifier.size(20.dp)
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -381,7 +591,7 @@ fun Step1Screen(
                     Box(
                         Modifier.fillMaxSize().background(
                             if (viewModel.isStep1Valid())
-                                Brush.horizontalGradient(listOf(Primary, PrimaryContainer))
+                                Brush.horizontalGradient(listOf(formData.selectedType.accentColor, formData.selectedType.accentColor.copy(0.8f)))
                             else
                                 Brush.horizontalGradient(listOf(Color.Gray.copy(0.3f), Color.Gray.copy(0.3f))),
                             RoundedCornerShape(20.dp)
@@ -401,7 +611,7 @@ fun Step1Screen(
                 Spacer(Modifier.height(32.dp))
             }
 
-            // === EXIT DIALOG ===
+            // EXIT DIALOG
             if (showExitDialog) {
                 AlertDialog(
                     onDismissRequest = { showExitDialog = false },
@@ -413,24 +623,7 @@ fun Step1Screen(
                         }
                     },
                     title = { Text("Quitter le formulaire ?", fontWeight = FontWeight.Bold) },
-                    text = {
-                        Column {
-                            Text("Vos modifications seront perdues.", color = Color.Gray)
-                            if (formData.customImageUri != null) {
-                                Spacer(Modifier.height(12.dp))
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(0.3f)),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.Photo, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Image personnalisée perdue", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.error)
-                                    }
-                                }
-                            }
-                        }
-                    },
+                    text = { Text("Vos modifications seront perdues.", color = Color.Gray) },
                     confirmButton = {
                         TextButton(
                             onClick = {

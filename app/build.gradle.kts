@@ -111,4 +111,6 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
+    // === COIL POUR CHARGER LES IMAGES (DRAPEAUX) ===
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }
