@@ -5,7 +5,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.example.dam_tp_1.model.ProductType
 import kotlinx.parcelize.Parcelize
+
 data class ProductFormData(
+    val firestoreId: String = "",  // ✅ AJOUTE ÇA
+    val userId: String = "",        // ✅ AJOUTE ÇA
     val selectedType: ProductType = ProductType.Durable,
     val productName: String = "",
     val purchaseDate: String = "",
@@ -20,7 +23,7 @@ data class ProductFormData(
     val notes: String = "",
     val hasWarranty: Boolean = false,
     val warrantyDuration: String = "",
-    val customImageUri: String? = null // ✅ NOUVEAU - Image personnalisée
+    val customImageUri: String? = null
 )
 
 @Parcelize

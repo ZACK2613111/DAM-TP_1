@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import com.example.dam_tp_1.navigation.Screen
 import com.example.dam_tp_1.ui.theme.*
 import com.example.dam_tp_1.viewmodel.ProductFormViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -78,18 +79,18 @@ fun SummaryScreen(
                 }
 
                 // === INFOS DE BASE ===
-                SummaryCard(title = "Informations", icon = Icons.Default.Info, accentColor = formData.selectedType.accentColor) {
+                SummaryCard(title = "Informations", icon = Icons.Default.Info, accentColor = Primary) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = formData.selectedType.imageRes),
                             contentDescription = null,
-                            modifier = Modifier.size(70.dp).clip(RoundedCornerShape(16.dp)).border(2.dp, formData.selectedType.accentColor, RoundedCornerShape(16.dp)).padding(12.dp)
+                            modifier = Modifier.size(70.dp).clip(RoundedCornerShape(16.dp)).border(2.dp, Primary, RoundedCornerShape(16.dp)).padding(12.dp)
                         )
                         Spacer(Modifier.width(16.dp))
                         Column {
                             Text(formData.productName, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                             Spacer(Modifier.height(4.dp))
-                            Text(formData.selectedType.displayName, style = MaterialTheme.typography.bodyMedium, color = formData.selectedType.accentColor)
+                            Text(formData.selectedType.displayName, style = MaterialTheme.typography.bodyMedium, color = Primary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -98,7 +99,7 @@ fun SummaryScreen(
                 }
 
                 // === DÉTAILS COMMERCIAUX ===
-                SummaryCard(title = "Détails", icon = Icons.Default.Store, accentColor = formData.selectedType.accentColor) {
+                SummaryCard(title = "Détails", icon = Icons.Default.Store, accentColor = Primary) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(40.dp).background(Color(formData.selectedColorArgb), CircleShape).border(2.dp, Color.Gray.copy(0.3f), CircleShape))
                         Spacer(Modifier.width(12.dp))
@@ -115,7 +116,7 @@ fun SummaryScreen(
                 }
 
                 // === PRÉFÉRENCES ===
-                SummaryCard(title = "Préférences", icon = Icons.Default.Star, accentColor = formData.selectedType.accentColor) {
+                SummaryCard(title = "Préférences", icon = Icons.Default.Star, accentColor = Primary) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("⭐ Favoris", style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.weight(1f))
@@ -155,7 +156,16 @@ fun SummaryScreen(
                     }
                     Button(
                         onClick = {
+                            println("🔍 DÉBUT: Clic sur Enregistrer")
                             viewModel.addProduct()
+
+                            // TEST DEBUG
+                            scope.launch {
+                                delay(2000)
+                                println("🔍 PRODUCTS LIST SIZE: ${viewModel.productsList.size}")
+                                println("🔍 ERROR MESSAGE: ${viewModel.errorMessage}")
+                            }
+
                             showSuccessDialog = true
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
@@ -164,7 +174,7 @@ fun SummaryScreen(
                         contentPadding = PaddingValues(0.dp),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(formData.selectedType.accentColor, formData.selectedType.accentColor.copy(0.8f))), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(Primary, PrimaryContainer)), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Save, null, tint = Color.White, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(8.dp))
@@ -197,7 +207,7 @@ fun SummaryScreen(
                                 popUpTo(Screen.Home.route) { inclusive = true }
                             }
                         }) {
-                            Text("Voir ma collection", color = formData.selectedType.accentColor, fontWeight = FontWeight.Bold)
+                            Text("Voir ma collection", color = Primary, fontWeight = FontWeight.Bold)
                         }
                     },
                     dismissButton = {

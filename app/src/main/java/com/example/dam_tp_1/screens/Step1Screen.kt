@@ -1,5 +1,6 @@
 package com.example.dam_tp_1.screens
 
+import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -160,7 +161,7 @@ fun Step1Screen(
                             selectedType = formData.selectedType,
                             customImageUri = formData.customImageUri,
                             onImageSelected = { uri ->
-                                viewModel.updateCustomImage(uri)
+                                viewModel.updateCustomImage(uri as Uri?)
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             }
                         )
