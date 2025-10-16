@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -12,16 +13,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.example.dam_tp_1.data.ProductFormData
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductCard(
     product: ProductFormData,
@@ -32,42 +35,44 @@ fun ProductCard(
     val haptic = LocalHapticFeedback.current
     var isPressed by remember { mutableStateOf(false) }
 
-    val animatedElevation by animateDpAsState(
-        targetValue = if (isPressed) 8.dp else 2.dp,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-    )
-
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(20.dp))
             .clickable {
                 onClick()
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             },
-        shape = MaterialTheme.shapes.large,
-        elevation = CardDefaults.cardElevation(defaultElevation = animatedElevation),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            containerColor = Color.White
+        ),
+        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.1f))
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            // Header avec image et infos principales
+        Column(modifier = Modifier.padding(20.dp)) {
+            // === HEADER ===
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Image du produit avec animation
+                // Image avec gradient border
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(product.selectedType.accentColor.copy(alpha = 0.1f))
+                        .size(70.dp)
+                        .shadow(4.dp, RoundedCornerShape(16.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    product.selectedType.accentColor.copy(alpha = 0.2f),
+                                    product.selectedType.accentColor.copy(alpha = 0.05f)
+                                )
+                            ),
+                            RoundedCornerShape(16.dp)
+                        )
                         .border(
                             2.dp,
                             product.selectedType.accentColor,
-                            MaterialTheme.shapes.medium
+                            RoundedCornerShape(16.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -75,7 +80,7 @@ fun ProductCard(
                         painter = painterResource(id = product.selectedType.imageRes),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(45.dp)
                             .padding(4.dp)
                     )
                 }
@@ -83,164 +88,211 @@ fun ProductCard(
                 Spacer(Modifier.width(16.dp))
 
                 // Infos principales
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = product.productName,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = product.productName,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 18.sp
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = Color(0xFF1C1B1F)
+                    )
 
-                        // Badge du type
+                    Spacer(Modifier.height(4.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Card(
                             colors = CardDefaults.cardColors(
-                                containerColor = product.selectedType.accentColor.copy(alpha = 0.2f)
+                                containerColor = product.selectedType.accentColor.copy(alpha = 0.15f)
                             ),
-                            modifier = Modifier.padding(start = 8.dp)
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 product.selectedType.displayName,
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
                                 color = product.selectedType.accentColor,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        if (product.isFavorite) {
+                            Spacer(Modifier.width(8.dp))
+                            Icon(
+                                Icons.Default.Favorite,
+                                null,
+                                tint = Color(0xFFE91E63),
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
 
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(6.dp))
 
-                    // Brand et couleur
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    // Brand avec couleur
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = product.brand,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = product.selectedType.accentColor
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = Color.Gray
                         )
 
                         if (product.selectedColorArgb != 0) {
                             Spacer(Modifier.width(8.dp))
                             Box(
                                 modifier = Modifier
-                                    .size(12.dp)
-                                    .background(
-                                        Color(product.selectedColorArgb),
-                                        CircleShape
-                                    )
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(4.dp))
-
-                    // Rating et prix
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(5) { star ->
-                            Icon(
-                                imageVector = if (star < product.rating) Icons.Default.Star else Icons.Default.StarBorder,
-                                contentDescription = null,
-                                tint = if (star < product.rating) Color(0xFFFFA726) else MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.size(12.dp)
-                            )
-                        }
-
-                        Spacer(Modifier.width(8.dp))
-
-                        Text(
-                            text = "${product.price}€",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-
-                        if (product.isFavorite) {
-                            Spacer(Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = "Favori",
-                                tint = Color.Red,
-                                modifier = Modifier.size(16.dp)
+                                    .size(14.dp)
+                                    .background(Color(product.selectedColorArgb), CircleShape)
+                                    .border(1.5.dp, Color.Gray.copy(0.3f), CircleShape)
                             )
                         }
                     }
                 }
 
-                // Actions
-                Column {
-                    IconButton(onClick = onDelete) {
+                // Delete button
+                IconButton(
+                    onClick = {
+                        onDelete()
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                            CircleShape
+                        )
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
+
+            Spacer(Modifier.height(16.dp))
+
+            // === RATING ET PRIX ===
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Rating
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    repeat(5) { index ->
                         Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Supprimer",
-                            tint = MaterialTheme.colorScheme.error
+                            imageVector = if (index < product.rating) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = null,
+                            tint = if (index < product.rating) Color(0xFFFFB300) else Color.Gray.copy(0.3f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "${product.rating}/5",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = Color.Gray
+                    )
+                }
+
+                // Prix avec gradient
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        product.selectedType.accentColor.copy(alpha = 0.2f),
+                                        product.selectedType.accentColor.copy(alpha = 0.1f)
+                                    )
+                                ),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            "${product.price} €",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.ExtraBold
+                            ),
+                            color = product.selectedType.accentColor
                         )
                     }
                 }
             }
 
-            // Infos additionnelles (collapsibles)
+            // === METADATA ===
             if (product.notes.isNotBlank() || product.country.isNotBlank()) {
-                Spacer(Modifier.height(12.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(16.dp))
 
-                // Metadata row
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Gray.copy(alpha = 0.05f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    if (product.country.isNotBlank()) {
-                        Icon(
-                            imageVector = Icons.Default.Public,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = product.country,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                        )
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (product.country.isNotBlank()) {
+                                Icon(
+                                    Icons.Default.Public,
+                                    null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    product.country,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
 
-                        Spacer(Modifier.width(16.dp))
+                                Spacer(Modifier.width(16.dp))
+                            }
+
+                            Icon(
+                                Icons.Default.CalendarToday,
+                                null,
+                                modifier = Modifier.size(14.dp),
+                                tint = Color.Gray
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                product.purchaseDate,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
+
+                        if (product.notes.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                product.notes,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray.copy(alpha = 0.8f),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
-
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = product.purchaseDate,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                    )
-                }
-
-                if (product.notes.isNotBlank()) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = product.notes,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
                 }
             }
         }

@@ -10,8 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.dam_tp_1.ui.theme.Primary
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBar(
     query: String,
@@ -20,67 +20,80 @@ fun SearchBar(
     activeFiltersCount: Int,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Row(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                placeholder = { Text("Rechercher un produit...") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Rechercher"
-                    )
-                },
-                trailingIcon = if (query.isNotBlank()) {
-                    {
-                        IconButton(onClick = { onQueryChange("") }) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "Effacer"
-                            )
-                        }
-                    }
-                } else null,
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = Color.Transparent
+        // Search TextField
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = {
+                Text(
+                    "Rechercher un produit...",
+                    color = Color.Gray.copy(alpha = 0.6f)
                 )
-            )
-
-            Spacer(Modifier.width(8.dp))
-
-            // Bouton filtres avec badge
-            BadgedBox(
-                badge = {
-                    if (activeFiltersCount > 0) {
-                        Badge {
-                            Text(activeFiltersCount.toString())
-                        }
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = Primary
+                )
+            },
+            trailingIcon = if (query.isNotBlank()) {
+                {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Effacer",
+                            tint = Color.Gray
+                        )
                     }
                 }
-            ) {
-                FilledTonalIconButton(
-                    onClick = onFilterClick,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FilterList,
-                        contentDescription = "Filtres"
-                    )
+            } else null,
+            modifier = Modifier.weight(1f),
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Primary,
+                unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
+                cursorColor = Primary,
+                focusedContainerColor = Primary.copy(alpha = 0.03f),
+                unfocusedContainerColor = Color.Gray.copy(alpha = 0.03f)
+            )
+        )
+
+        // Filter Button with Badge
+        BadgedBox(
+            badge = {
+                if (activeFiltersCount > 0) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = Color.White
+                    ) {
+                        Text(
+                            activeFiltersCount.toString(),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
+            }
+        ) {
+            FilledTonalIconButton(
+                onClick = onFilterClick,
+                modifier = Modifier.size(56.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Primary.copy(alpha = 0.1f),
+                    contentColor = Primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FilterList,
+                    contentDescription = "Filtres",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }

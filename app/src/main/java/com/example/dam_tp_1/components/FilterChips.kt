@@ -1,21 +1,24 @@
 package com.example.dam_tp_1.components
 
-import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.dam_tp_1.data.FilterState
 import com.example.dam_tp_1.data.SortOption
 import com.example.dam_tp_1.model.ProductType
+import com.example.dam_tp_1.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterChips(
     filterState: FilterState,
@@ -27,155 +30,245 @@ fun FilterChips(
     onClearFilters: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showSortMenu by remember { mutableStateOf(false) }
+    // Map pays vers emoji drapeaux
+    val countryFlags = mapOf(
+        "France" to "🇫🇷",
+        "Algérie" to "🇩🇿",
+        "Maroc" to "🇲🇦",
+        "Tunisie" to "🇹🇳",
+        "Canada" to "🇨🇦",
+        "États-Unis" to "🇺🇸",
+        "Royaume-Uni" to "🇬🇧",
+        "Allemagne" to "🇩🇪",
+        "Italie" to "🇮🇹",
+        "Espagne" to "🇪🇸",
+        "Belgique" to "🇧🇪",
+        "Suisse" to "🇨🇭",
+        "Portugal" to "🇵🇹",
+        "Japon" to "🇯🇵",
+        "Chine" to "🇨🇳"
+    )
 
-    AnimatedVisibility(
-        visible = true,
-        enter = slideInVertically() + fadeIn(),
-        exit = slideOutVertically() + fadeOut()
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(modifier = modifier) {
-            // Row 1: Types de produits
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Spacer(Modifier.width(4.dp))
-
-                ProductType.entries.forEach { type ->
-                    FilterChip(
-                        selected = type in filterState.selectedTypes,
-                        onClick = { onTypeToggle(type) },
-                        label = { Text(type.displayName) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Category,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = type.accentColor.copy(alpha = 0.2f),
-                            selectedLabelColor = type.accentColor
+        // === ROW 1: Types de produits ===
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ProductType.entries.forEach { type ->
+                AssistChip(
+                    onClick = { onTypeToggle(type) },
+                    label = {
+                        Text(
+                            type.displayName,
+                            fontWeight = if (type in filterState.selectedTypes)
+                                FontWeight.Bold
+                            else
+                                FontWeight.Medium
                         )
-                    )
-                }
-
-                Spacer(Modifier.width(4.dp))
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Row 2: Pays et options
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Spacer(Modifier.width(4.dp))
-
-                // Chip Favoris
-                FilterChip(
-                    selected = filterState.showFavoritesOnly,
-                    onClick = onFavoritesToggle,
-                    label = { Text("Favoris") },
+                    },
                     leadingIcon = {
                         Icon(
-                            imageVector = if (filterState.showFavoritesOnly) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            imageVector = Icons.Default.Inventory,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
                     },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.errorContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.error
-                    )
-                )
-
-                // Pays disponibles
-                availableCountries.take(3).forEach { country ->
-                    FilterChip(
-                        selected = country in filterState.selectedCountries,
-                        onClick = { onCountryToggle(country) },
-                        label = { Text(country) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Public,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    )
-                }
-
-                // Menu de tri
-                Box {
-                    FilterChip(
-                        selected = false,
-                        onClick = { showSortMenu = true },
-                        label = { Text("Tri: ${filterState.sortBy.displayName}") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Sort,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    )
-
-                    DropdownMenu(
-                        expanded = showSortMenu,
-                        onDismissRequest = { showSortMenu = false }
-                    ) {
-                        SortOption.entries.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option.displayName) },
-                                onClick = {
-                                    onSortChange(option)
-                                    showSortMenu = false
-                                },
-                                leadingIcon = {
-                                    if (option == filterState.sortBy) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            )
-                        }
+                    shape = RoundedCornerShape(10.dp),
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = if (type in filterState.selectedTypes)
+                            type.accentColor.copy(alpha = 0.15f)
+                        else
+                            Color.White,
+                        labelColor = if (type in filterState.selectedTypes)
+                            type.accentColor
+                        else
+                            Color.Gray,
+                        leadingIconContentColor = if (type in filterState.selectedTypes)
+                            type.accentColor
+                        else
+                            Color.Gray
+                    ),
+                    border = if (type in filterState.selectedTypes) {
+                        BorderStroke(1.5.dp, type.accentColor)
+                    } else {
+                        BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
                     }
-                }
+                )
+            }
+        }
 
-                // Bouton Clear All (si des filtres sont actifs)
-                if (filterState.selectedTypes.isNotEmpty() ||
-                    filterState.selectedCountries.isNotEmpty() ||
-                    filterState.showFavoritesOnly ||
-                    filterState.searchQuery.isNotBlank()) {
-
-                    FilterChip(
-                        selected = false,
-                        onClick = onClearFilters,
-                        label = { Text("Effacer") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.ClearAll,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
-                            labelColor = MaterialTheme.colorScheme.error
-                        )
+        // === ROW 2: Options (Favoris, Pays, Tri) ===
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Chip Favoris
+            AssistChip(
+                onClick = onFavoritesToggle,
+                label = {
+                    Text(
+                        "Favoris",
+                        fontWeight = if (filterState.showFavoritesOnly)
+                            FontWeight.Bold
+                        else
+                            FontWeight.Medium
                     )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = if (filterState.showFavoritesOnly)
+                            Icons.Default.Favorite
+                        else
+                            Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                },
+                shape = RoundedCornerShape(10.dp),
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = if (filterState.showFavoritesOnly)
+                        Color(0xFFFFE5EC)
+                    else
+                        Color.White,
+                    labelColor = if (filterState.showFavoritesOnly)
+                        Color(0xFFE91E63)
+                    else
+                        Color.Gray,
+                    leadingIconContentColor = if (filterState.showFavoritesOnly)
+                        Color(0xFFE91E63)
+                    else
+                        Color.Gray
+                ),
+                border = if (filterState.showFavoritesOnly) {
+                    BorderStroke(1.5.dp, Color(0xFFE91E63))
+                } else {
+                    BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
                 }
+            )
 
-                Spacer(Modifier.width(4.dp))
+            // Chip Epargne (optionnel)
+            if (filterState.showFavoritesOnly) {
+                AssistChip(
+                    onClick = { },
+                    label = { Text("Epargne", fontWeight = FontWeight.Medium) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Savings,
+                            null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = Color.White,
+                        labelColor = Color.Gray,
+                        leadingIconContentColor = Color.Gray
+                    ),
+                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
+                )
+            }
+
+            // === PAYS AVEC DRAPEAUX ===
+            availableCountries.take(2).forEach { country ->
+                val flag = countryFlags[country] ?: "🌍"
+
+                AssistChip(
+                    onClick = { onCountryToggle(country) },
+                    label = {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Text(
+                                flag,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                country,
+                                fontWeight = if (country in filterState.selectedCountries)
+                                    FontWeight.Bold
+                                else
+                                    FontWeight.Medium
+                            )
+                        }
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = if (country in filterState.selectedCountries)
+                            Primary.copy(alpha = 0.15f)
+                        else
+                            Color.White,
+                        labelColor = if (country in filterState.selectedCountries)
+                            Primary
+                        else
+                            Color.Gray
+                    ),
+                    border = if (country in filterState.selectedCountries) {
+                        BorderStroke(1.5.dp, Primary)
+                    } else {
+                        BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
+                    }
+                )
+            }
+
+            // Autre option (autre pays)
+            if (availableCountries.size > 2) {
+                AssistChip(
+                    onClick = { },
+                    label = {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Text("🌍", fontSize = 16.sp)
+                            Text("Autre", fontWeight = FontWeight.Medium)
+                        }
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = Color.White,
+                        labelColor = Color.Gray
+                    ),
+                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
+                )
+            }
+
+            // Bouton Clear All
+            if (filterState.selectedTypes.isNotEmpty() ||
+                filterState.selectedCountries.isNotEmpty() ||
+                filterState.showFavoritesOnly
+            ) {
+                AssistChip(
+                    onClick = onClearFilters,
+                    label = {
+                        Text(
+                            "Effacer",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Close,
+                            null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(0.3f),
+                        labelColor = MaterialTheme.colorScheme.error,
+                        leadingIconContentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.error)
+                )
             }
         }
     }

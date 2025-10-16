@@ -1,18 +1,24 @@
 package com.example.dam_tp_1.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.dam_tp_1.ui.theme.*
 
 @Composable
 fun EmptyCollectionState(
@@ -26,105 +32,148 @@ fun EmptyCollectionState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Card(
-            modifier = Modifier.size(120.dp),
-            shape = CircleShape,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        // === ICON AVEC GRADIENT ===
+        Box(
+            modifier = Modifier
+                .size(140.dp)
+                .shadow(16.dp, CircleShape)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Primary.copy(0.2f), Primary.copy(0.05f))
+                    ),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Icon(
-                    Icons.Default.Inventory,
-                    null,
-                    modifier = Modifier.size(60.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+            Icon(
+                Icons.Default.Inventory,
+                null,
+                modifier = Modifier.size(70.dp),
+                tint = Primary
+            )
         }
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(40.dp))
 
         Text(
             "Votre collection est vide",
             style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 26.sp
             ),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = Color(0xFF1C1B1F)
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         Text(
-            "Commencez à construire votre collection en ajoutant votre premier produit",
+            "Commencez à construire votre collection\nen ajoutant votre premier produit",
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center
+            color = Color.Gray,
+            textAlign = TextAlign.Center,
+            lineHeight = 24.sp
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(48.dp))
 
-        ElevatedButton(
+        // === BOUTON AJOUTER PREMIUM ===
+        Button(
             onClick = onAddProduct,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White
-            )
+                .fillMaxWidth(0.85f)
+                .height(64.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent
+            ),
+            contentPadding = PaddingValues(0.dp),
+            shape = RoundedCornerShape(20.dp)
         ) {
-            Icon(Icons.Default.Add, null, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(
-                "Ajouter mon premier produit",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                )
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.horizontalGradient(listOf(Primary, PrimaryContainer)),
+                        RoundedCornerShape(20.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color.White.copy(0.2f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "Ajouter mon premier produit",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        ),
+                        color = Color.White
+                    )
+                }
+            }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(56.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+        // === FEATURES PREVIEW ===
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             FeaturePreview(Icons.Default.Search, "Recherche")
             FeaturePreview(Icons.Default.Star, "Favoris")
-            FeaturePreview(Icons.Default.Analytics, "Statistiques")
+            FeaturePreview(Icons.Default.Analytics, "Stats")
         }
     }
 }
 
 @Composable
 private fun FeaturePreview(icon: ImageVector, text: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Card(
-            modifier = Modifier.size(40.dp),
-            shape = CircleShape,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
-            )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .shadow(6.dp, CircleShape)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Primary.copy(alpha = 0.15f),
+                            Primary.copy(alpha = 0.05f)
+                        )
+                    ),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Icon(
-                    icon,
-                    null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                icon,
+                null,
+                tint = Primary,
+                modifier = Modifier.size(28.dp)
+            )
         }
-        Spacer(Modifier.height(8.dp))
+
         Text(
             text,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Medium
+            ),
+            color = Color.Gray
         )
     }
 }

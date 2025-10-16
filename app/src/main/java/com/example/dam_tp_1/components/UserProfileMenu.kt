@@ -1,15 +1,23 @@
 package com.example.dam_tp_1.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.dam_tp_1.ui.theme.*
 
 @Composable
 fun UserProfileMenu(
@@ -24,123 +32,209 @@ fun UserProfileMenu(
     onHelpClick: () -> Unit = {}
 ) {
     DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismiss,
-        modifier = Modifier.width(220.dp)
-    ) {
-        // Header
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Card(
-                    modifier = Modifier.size(48.dp),
-                    shape = CircleShape,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+        expanded, onDismiss, Modifier
+            .width(280.dp)
+            .shadow(16.dp, RoundedCornerShape(20.dp))) {
+        // === HEADER PREMIUM ===
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Primary.copy(0.1f), Color.White)
                     )
+                )
+                .padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .shadow(8.dp, CircleShape)
+                        .background(
+                            Brush.verticalGradient(listOf(Primary, PrimaryContainer)),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Icon(
-                            Icons.Default.Person,
-                            null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+                    Icon(
+                        Icons.Default.Person,
+                        null,
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
-                Spacer(Modifier.width(12.dp))
-                Column {
+
+                Spacer(Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         userName,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        )
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold
+                        ),
+                        color = Color(0xFF1C1B1F),
+                        maxLines = 1
                     )
+                    Spacer(Modifier.height(4.dp))
                     Text(
                         userEmail,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = Color.Gray,
+                        maxLines = 1
                     )
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
 
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    containerColor = Color(0xFFFFD700).copy(alpha = 0.2f)
                 ),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color(0xFFFFD700).copy(0.3f))
             ) {
                 Row(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         Icons.Default.Star,
                         null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.size(16.dp)
+                        tint = Color(0xFFFFB300),
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        "Collection Premium",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontWeight = FontWeight.Medium
+                        "Collection Premium ✨",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
                         ),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                        color = Color(0xFFE65100)
                     )
                 }
             }
         }
 
-        HorizontalDivider()
+        HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
 
-        // Menu items
-        DropdownMenuItem(
-            text = { Text("Mon profil") },
-            onClick = { onDismiss(); onProfileClick() },
-            leadingIcon = { Icon(Icons.Default.AccountCircle, null) }
+        Spacer(Modifier.height(8.dp))
+
+        // === MENU ITEMS ===
+        MenuItemPremium(
+            icon = Icons.Default.AccountCircle,
+            text = "Mon profil",
+            onClick = { onDismiss(); onProfileClick() }
         )
 
-        DropdownMenuItem(
-            text = { Text("Paramètres") },
-            onClick = { onDismiss(); onSettingsClick() },
-            leadingIcon = { Icon(Icons.Default.Settings, null) }
+        MenuItemPremium(
+            icon = Icons.Default.Settings,
+            text = "Paramètres",
+            onClick = { onDismiss(); onSettingsClick() }
         )
 
-        DropdownMenuItem(
-            text = { Text("Mes statistiques") },
-            onClick = { onDismiss(); onStatsClick() },
-            leadingIcon = { Icon(Icons.Default.Analytics, null) }
+        MenuItemPremium(
+            icon = Icons.Default.Analytics,
+            text = "Mes statistiques",
+            onClick = { onDismiss(); onStatsClick() }
         )
 
-        DropdownMenuItem(
-            text = { Text("Aide & Support") },
-            onClick = { onDismiss(); onHelpClick() },
-            leadingIcon = { Icon(Icons.Default.Help, null) }
+        MenuItemPremium(
+            icon = Icons.Default.Help,
+            text = "Aide & Support",
+            onClick = { onDismiss(); onHelpClick() }
         )
 
-        HorizontalDivider()
+        Spacer(Modifier.height(8.dp))
 
+        HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
+
+        Spacer(Modifier.height(8.dp))
+
+        // === LOGOUT ===
         DropdownMenuItem(
             text = {
-                Text(
-                    "Se déconnecter",
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                MaterialTheme.colorScheme.errorContainer.copy(0.3f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Logout,
+                            null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.width(12.dp))
+
+                    Text(
+                        "Se déconnecter",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             },
-            onClick = { onDismiss(); onLogout() },
-            leadingIcon = {
-                Icon(
-                    Icons.Default.Logout,
-                    null,
-                    tint = MaterialTheme.colorScheme.error
+            onClick = { onDismiss(); onLogout() }
+        )
+
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun MenuItemPremium(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
+    DropdownMenuItem(
+        text = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Primary.copy(0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        icon,
+                        null,
+                        tint = Primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                Text(
+                    text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFF1C1B1F)
                 )
             }
-        )
-    }
+        },
+        onClick = onClick
+    )
 }
