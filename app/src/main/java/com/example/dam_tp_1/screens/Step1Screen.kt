@@ -1,11 +1,10 @@
 package com.example.dam_tp_1.screens
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,12 +56,10 @@ fun Step1Screen(
     val datePickerState = rememberDatePickerState()
     var showExitDialog by remember { mutableStateOf(false) }
 
-    // API State
     var countries by remember { mutableStateOf<List<Country>>(emptyList()) }
     var isLoadingCountries by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // Load countries from API
     LaunchedEffect(Unit) {
         isLoadingCountries = true
         try {
@@ -80,7 +77,6 @@ fun Step1Screen(
         else countries.filter { it.name.common.contains(searchQuery, ignoreCase = true) }
     }
 
-    // DatePicker Dialog
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -112,39 +108,24 @@ fun Step1Screen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
+    Box(Modifier.fillMaxSize().background(Color.White)) {
         Scaffold(
             containerColor = Color.White,
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            "Nouveau produit",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold
-                            ),
-                            color = Color(0xFF1C1B1F)
-                        )
+                        Text("Nouveau produit", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold), color = Color(0xFF1C1B1F))
                     },
                     navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                if (formData.productName.isNotBlank() ||
-                                    formData.country.isNotBlank() ||
-                                    formData.customImageUri != null
-                                ) {
-                                    showExitDialog = true
-                                } else {
-                                    navController.navigate(Screen.Home.route) {
-                                        popUpTo(Screen.Home.route) { inclusive = true }
-                                    }
+                        IconButton(onClick = {
+                            if (formData.productName.isNotBlank() || formData.country.isNotBlank() || formData.customImageUri != null) {
+                                showExitDialog = true
+                            } else {
+                                navController.navigate(Screen.Home.route) {
+                                    popUpTo(Screen.Home.route) { inclusive = true }
                                 }
                             }
-                        ) {
+                        }) {
                             Icon(Icons.Default.ArrowBack, "Retour", tint = Primary)
                         }
                     },
@@ -157,46 +138,20 @@ fun Step1Screen(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
                     .padding(paddingValues)
-                    .padding(horizontal = 20.dp)
-                    .padding(top = 20.dp),
+                    .padding(horizontal = 20.dp, vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                StepHeader(
-                    stepNumber = 1,
-                    totalSteps = 3,
-                    title = "Informations de base",
-                    subtitle = "Type et détails principaux"
-                )
+                StepHeader(stepNumber = 1, totalSteps = 3, title = "Informations de base", subtitle = "Type et détails principaux")
 
                 // === IMAGE PICKER ===
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, Color.Gray.copy(0.1f))
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(formData.selectedType.accentColor.copy(0.15f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Image, null, tint = formData.selectedType.accentColor, modifier = Modifier.size(22.dp))
+                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, Color.Gray.copy(0.1f))) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            Box(Modifier.size(40.dp).background(Primary.copy(0.15f), CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Image, null, tint = Primary, modifier = Modifier.size(22.dp))
                             }
                             Spacer(Modifier.width(12.dp))
-                            Text(
-                                "Image du produit",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color(0xFF1C1B1F)
-                            )
+                            Text("Image du produit", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1C1B1F))
                         }
 
                         Spacer(Modifier.height(20.dp))
@@ -211,86 +166,36 @@ fun Step1Screen(
                         )
 
                         Spacer(Modifier.height(12.dp))
-
-                        Text(
-                            "Optionnel - Personnalisez l'image",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray,
-                            textAlign = TextAlign.Center
-                        )
+                        Text("Optionnel - Personnalisez l'image", style = MaterialTheme.typography.bodySmall, color = Color.Gray, textAlign = TextAlign.Center)
                     }
                 }
 
                 // === TYPE DE PRODUIT ===
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, Color.Gray.copy(0.1f))
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(formData.selectedType.accentColor.copy(0.15f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Category, null, tint = formData.selectedType.accentColor, modifier = Modifier.size(22.dp))
+                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, Color.Gray.copy(0.1f))) {
+                    Column(Modifier.padding(24.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            Box(Modifier.size(40.dp).background(Primary.copy(0.15f), CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Category, null, tint = Primary, modifier = Modifier.size(22.dp))
                             }
                             Spacer(Modifier.width(12.dp))
-                            Text(
-                                "Type de produit",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color(0xFF1C1B1F)
-                            )
+                            Text("Type de produit", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1C1B1F))
                         }
 
                         Spacer(Modifier.height(20.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             ProductType.entries.forEach { type ->
                                 Card(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable {
-                                            viewModel.updateFormData { it.copy(selectedType = type) }
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        },
+                                    modifier = Modifier.weight(1f).clickable {
+                                        viewModel.updateFormData { it.copy(selectedType = type) }
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    },
                                     shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (type == formData.selectedType)
-                                            type.accentColor.copy(0.15f)
-                                        else
-                                            Color.White
-                                    ),
-                                    border = BorderStroke(
-                                        2.dp,
-                                        if (type == formData.selectedType) type.accentColor else Color.Gray.copy(0.2f)
-                                    )
+                                    colors = CardDefaults.cardColors(containerColor = if (type == formData.selectedType) Primary.copy(0.15f) else Color.White),
+                                    border = BorderStroke(2.dp, if (type == formData.selectedType) Primary else Color.Gray.copy(0.2f))
                                 ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.padding(16.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .background(
-                                                    if (type == formData.selectedType)
-                                                        type.accentColor.copy(0.2f)
-                                                    else
-                                                        Color.Gray.copy(0.1f),
-                                                    CircleShape
-                                                ),
-                                            contentAlignment = Alignment.Center
-                                        ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
+                                        Box(Modifier.size(48.dp).background(if (type == formData.selectedType) Primary.copy(0.2f) else Color.Gray.copy(0.1f), CircleShape), contentAlignment = Alignment.Center) {
                                             Icon(
                                                 when(type) {
                                                     ProductType.Consumable -> Icons.Default.ShoppingCart
@@ -298,19 +203,12 @@ fun Step1Screen(
                                                     ProductType.Other -> Icons.Default.MoreHoriz
                                                 },
                                                 null,
-                                                tint = if (type == formData.selectedType) type.accentColor else Color.Gray,
+                                                tint = if (type == formData.selectedType) Primary else Color.Gray,
                                                 modifier = Modifier.size(24.dp)
                                             )
                                         }
                                         Spacer(Modifier.height(8.dp))
-                                        Text(
-                                            type.displayName,
-                                            style = MaterialTheme.typography.labelLarge.copy(
-                                                fontWeight = if (type == formData.selectedType) FontWeight.Bold else FontWeight.Medium
-                                            ),
-                                            color = if (type == formData.selectedType) type.accentColor else Color.Gray,
-                                            textAlign = TextAlign.Center
-                                        )
+                                        Text(type.displayName, style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (type == formData.selectedType) FontWeight.Bold else FontWeight.Medium), color = if (type == formData.selectedType) Primary else Color.Gray, textAlign = TextAlign.Center)
                                     }
                                 }
                             }
@@ -319,31 +217,14 @@ fun Step1Screen(
                 }
 
                 // === INFORMATIONS PRODUIT ===
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, Color.Gray.copy(0.1f))
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(formData.selectedType.accentColor.copy(0.15f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Info, null, tint = formData.selectedType.accentColor, modifier = Modifier.size(22.dp))
+                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, Color.Gray.copy(0.1f))) {
+                    Column(Modifier.padding(24.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            Box(Modifier.size(40.dp).background(Primary.copy(0.15f), CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Info, null, tint = Primary, modifier = Modifier.size(22.dp))
                             }
                             Spacer(Modifier.width(12.dp))
-                            Text(
-                                "Informations produit",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color(0xFF1C1B1F)
-                            )
+                            Text("Informations produit", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1C1B1F))
                         }
 
                         Spacer(Modifier.height(20.dp))
@@ -352,16 +233,16 @@ fun Step1Screen(
                             value = formData.productName,
                             onValueChange = viewModel::updateProductName,
                             label = { Text("Nom du produit *") },
-                            leadingIcon = { Icon(Icons.Default.ShoppingCart, null, tint = formData.selectedType.accentColor) },
+                            leadingIcon = { Icon(Icons.Default.ShoppingCart, null, tint = Primary) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = formData.selectedType.accentColor,
-                                focusedLabelColor = formData.selectedType.accentColor,
+                                focusedBorderColor = Primary,
+                                focusedLabelColor = Primary,
                                 unfocusedBorderColor = Color.LightGray.copy(0.5f),
-                                cursorColor = formData.selectedType.accentColor,
-                                focusedContainerColor = formData.selectedType.accentColor.copy(0.03f)
+                                cursorColor = Primary,
+                                focusedContainerColor = Primary.copy(0.03f)
                             )
                         )
 
@@ -371,10 +252,10 @@ fun Step1Screen(
                             value = formData.purchaseDate,
                             onValueChange = {},
                             label = { Text("Date d'achat *") },
-                            leadingIcon = { Icon(Icons.Default.CalendarToday, null, tint = formData.selectedType.accentColor) },
+                            leadingIcon = { Icon(Icons.Default.CalendarToday, null, tint = Primary) },
                             trailingIcon = {
                                 IconButton(onClick = { showDatePicker = true }) {
-                                    Icon(Icons.Default.DateRange, null, tint = formData.selectedType.accentColor)
+                                    Icon(Icons.Default.DateRange, null, tint = Primary)
                                 }
                             },
                             singleLine = true,
@@ -382,10 +263,10 @@ fun Step1Screen(
                             enabled = false,
                             shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                disabledBorderColor = formData.selectedType.accentColor.copy(0.5f),
-                                disabledLabelColor = formData.selectedType.accentColor.copy(0.7f),
-                                disabledLeadingIconColor = formData.selectedType.accentColor.copy(0.7f),
-                                disabledTrailingIconColor = formData.selectedType.accentColor,
+                                disabledBorderColor = Primary.copy(0.5f),
+                                disabledLabelColor = Primary.copy(0.7f),
+                                disabledLeadingIconColor = Primary.copy(0.7f),
+                                disabledTrailingIconColor = Primary,
                                 disabledTextColor = Color(0xFF1C1B1F)
                             )
                         )
@@ -394,175 +275,74 @@ fun Step1Screen(
 
                         // === COUNTRY PICKER ===
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showCountryPicker = !showCountryPicker },
+                            modifier = Modifier.fillMaxWidth().clickable { showCountryPicker = !showCountryPicker },
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (formData.country.isNotBlank())
-                                    formData.selectedType.accentColor.copy(0.05f)
-                                else
-                                    Color.White
-                            ),
-                            border = BorderStroke(
-                                1.5.dp,
-                                if (formData.country.isNotBlank()) formData.selectedType.accentColor else Color.LightGray.copy(0.5f)
-                            )
+                            colors = CardDefaults.cardColors(containerColor = if (formData.country.isNotBlank()) Primary.copy(0.05f) else Color.White),
+                            border = BorderStroke(1.5.dp, if (formData.country.isNotBlank()) Primary else Color.LightGray.copy(0.5f))
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                            Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 val selectedCountry = countries.find { it.name.common == formData.country }
 
                                 if (selectedCountry != null) {
-                                    AsyncImage(
-                                        model = selectedCountry.flags.png,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                    )
+                                    AsyncImage(model = selectedCountry.flags.png, contentDescription = null, modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)))
                                 } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .background(formData.selectedType.accentColor.copy(0.15f), CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Default.Language, null, tint = formData.selectedType.accentColor, modifier = Modifier.size(24.dp))
+                                    Box(Modifier.size(40.dp).background(Primary.copy(0.15f), CircleShape), contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.Language, null, tint = Primary, modifier = Modifier.size(24.dp))
                                     }
                                 }
 
                                 Spacer(Modifier.width(12.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        "Pays d'origine",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = if (formData.country.isNotBlank()) formData.selectedType.accentColor else Color.Gray
-                                    )
+                                    Text("Pays d'origine", style = MaterialTheme.typography.labelMedium, color = if (formData.country.isNotBlank()) Primary else Color.Gray)
                                     if (formData.country.isNotBlank()) {
                                         Spacer(Modifier.height(2.dp))
-                                        Text(
-                                            formData.country,
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                            color = Color(0xFF1C1B1F)
-                                        )
+                                        Text(formData.country, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1C1B1F))
                                     } else {
                                         Spacer(Modifier.height(2.dp))
-                                        Text(
-                                            "Sélectionnez un pays",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.Gray.copy(0.6f)
-                                        )
+                                        Text("Sélectionnez un pays", style = MaterialTheme.typography.bodyMedium, color = Color.Gray.copy(0.6f))
                                     }
                                 }
 
-                                Icon(
-                                    if (showCountryPicker) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    null,
-                                    tint = formData.selectedType.accentColor
-                                )
+                                Icon(if (showCountryPicker) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, tint = Primary)
                             }
                         }
 
-                        AnimatedVisibility(
-                            visible = showCountryPicker,
-                            enter = slideInVertically() + expandVertically() + fadeIn(),
-                            exit = slideOutVertically() + shrinkVertically() + fadeOut()
-                        ) {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                border = BorderStroke(1.dp, Color.Gray.copy(0.1f))
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    // Search bar
+                        AnimatedVisibility(visible = showCountryPicker, enter = slideInVertically() + expandVertically() + fadeIn(), exit = slideOutVertically() + shrinkVertically() + fadeOut()) {
+                            Card(Modifier.fillMaxWidth().padding(vertical = 8.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, Color.Gray.copy(0.1f))) {
+                                Column(Modifier.fillMaxWidth()) {
                                     OutlinedTextField(
                                         value = searchQuery,
                                         onValueChange = { searchQuery = it },
                                         placeholder = { Text("Rechercher un pays...") },
-                                        leadingIcon = { Icon(Icons.Default.Search, null, tint = formData.selectedType.accentColor) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
+                                        leadingIcon = { Icon(Icons.Default.Search, null, tint = Primary) },
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
                                         shape = RoundedCornerShape(12.dp),
                                         singleLine = true,
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = formData.selectedType.accentColor,
-                                            cursorColor = formData.selectedType.accentColor
-                                        )
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primary, cursorColor = Primary)
                                     )
 
                                     if (isLoadingCountries) {
-                                        Box(
-                                            Modifier.fillMaxWidth().height(200.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            CircularProgressIndicator(color = formData.selectedType.accentColor)
+                                        Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                                            CircularProgressIndicator(color = Primary)
                                         }
                                     } else {
-                                        LazyColumn(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .heightIn(max = 300.dp)
-                                        ) {
+                                        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
                                             items(filteredCountries) { country ->
                                                 Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clickable {
-                                                            viewModel.updateCountry(country.name.common)
-                                                            showCountryPicker = false
-                                                            searchQuery = ""
-                                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                        }
-                                                        .background(
-                                                            if (country.name.common == formData.country)
-                                                                formData.selectedType.accentColor.copy(0.1f)
-                                                            else
-                                                                Color.Transparent
-                                                        )
-                                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                                    modifier = Modifier.fillMaxWidth().clickable {
+                                                        viewModel.updateCountry(country.name.common)
+                                                        showCountryPicker = false
+                                                        searchQuery = ""
+                                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                    }.background(if (country.name.common == formData.country) Primary.copy(0.1f) else Color.Transparent).padding(horizontal = 16.dp, vertical = 12.dp),
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    AsyncImage(
-                                                        model = country.flags.png,
-                                                        contentDescription = null,
-                                                        modifier = Modifier
-                                                            .size(32.dp)
-                                                            .clip(RoundedCornerShape(4.dp))
-                                                    )
+                                                    AsyncImage(model = country.flags.png, contentDescription = null, modifier = Modifier.size(32.dp).clip(RoundedCornerShape(4.dp)))
                                                     Spacer(Modifier.width(16.dp))
-                                                    Text(
-                                                        country.name.common,
-                                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                                            fontWeight = if (country.name.common == formData.country)
-                                                                FontWeight.Bold
-                                                            else
-                                                                FontWeight.Normal
-                                                        ),
-                                                        color = if (country.name.common == formData.country)
-                                                            formData.selectedType.accentColor
-                                                        else
-                                                            Color(0xFF1C1B1F),
-                                                        modifier = Modifier.weight(1f)
-                                                    )
+                                                    Text(country.name.common, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = if (country.name.common == formData.country) FontWeight.Bold else FontWeight.Normal), color = if (country.name.common == formData.country) Primary else Color(0xFF1C1B1F), modifier = Modifier.weight(1f))
                                                     if (country.name.common == formData.country) {
-                                                        Icon(
-                                                            Icons.Default.Check,
-                                                            null,
-                                                            tint = formData.selectedType.accentColor,
-                                                            modifier = Modifier.size(20.dp)
-                                                        )
+                                                        Icon(Icons.Default.Check, null, tint = Primary, modifier = Modifier.size(20.dp))
                                                     }
                                                 }
                                             }
@@ -590,10 +370,8 @@ fun Step1Screen(
                 ) {
                     Box(
                         Modifier.fillMaxSize().background(
-                            if (viewModel.isStep1Valid())
-                                Brush.horizontalGradient(listOf(formData.selectedType.accentColor, formData.selectedType.accentColor.copy(0.8f)))
-                            else
-                                Brush.horizontalGradient(listOf(Color.Gray.copy(0.3f), Color.Gray.copy(0.3f))),
+                            if (viewModel.isStep1Valid()) Brush.horizontalGradient(listOf(Primary, PrimaryContainer))
+                            else Brush.horizontalGradient(listOf(Color.Gray.copy(0.3f), Color.Gray.copy(0.3f))),
                             RoundedCornerShape(20.dp)
                         ),
                         contentAlignment = Alignment.Center
@@ -611,7 +389,7 @@ fun Step1Screen(
                 Spacer(Modifier.height(32.dp))
             }
 
-            // EXIT DIALOG
+            // === EXIT DIALOG ===
             if (showExitDialog) {
                 AlertDialog(
                     onDismissRequest = { showExitDialog = false },
@@ -625,16 +403,13 @@ fun Step1Screen(
                     title = { Text("Quitter le formulaire ?", fontWeight = FontWeight.Bold) },
                     text = { Text("Vos modifications seront perdues.", color = Color.Gray) },
                     confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showExitDialog = false
-                                viewModel.resetForm()
-                                navController.navigate(Screen.Home.route) {
-                                    popUpTo(Screen.Home.route) { inclusive = true }
-                                }
-                            },
-                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                        ) {
+                        TextButton(onClick = {
+                            showExitDialog = false
+                            viewModel.resetForm()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
                             Text("Quitter", fontWeight = FontWeight.Bold)
                         }
                     },

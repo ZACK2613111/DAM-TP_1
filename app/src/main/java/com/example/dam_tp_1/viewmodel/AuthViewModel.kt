@@ -247,7 +247,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // ✅ MÉTHODE POUR RAFRAÎCHIR LE STATUT DE VÉRIFICATION EMAIL
     fun refreshEmailVerificationStatus() {
         viewModelScope.launch {
             try {
@@ -283,7 +282,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // ✅ MÉTHODE POUR VÉRIFIER L'ÉTAT DE VÉRIFICATION EMAIL (ALIAS)
     fun checkEmailVerification() {
         refreshEmailVerificationStatus()
     }
@@ -305,7 +303,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Charger le profil utilisateur depuis Firestore
     private fun loadUserProfile(userId: String) {
         viewModelScope.launch {
             try {
@@ -325,7 +322,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Sauvegarder le profil utilisateur dans Firestore
     private suspend fun saveUserProfile(userProfile: UserProfile) {
         try {
             println("🔍 DEBUG: Sauvegarde du profil utilisateur")
@@ -342,7 +338,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Mettre à jour le profil utilisateur
     fun updateUserProfile(
         nom: String,
         prenom: String,
@@ -380,7 +375,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Réinitialiser le mot de passe
     fun resetPassword(email: String, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             try {
@@ -403,7 +397,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // ✅ RENVOYER L'EMAIL DE VÉRIFICATION
     fun resendVerificationEmail(onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             try {
@@ -425,7 +418,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Supprimer le compte utilisateur
     fun deleteAccount(onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             try {
@@ -435,10 +427,8 @@ class AuthViewModel : ViewModel() {
                 if (userId != null) {
                     _isLoading.value = true
 
-                    // Supprimer le profil de Firestore
                     firestore.collection("users").document(userId).delete().await()
 
-                    // Supprimer le compte Firebase Auth
                     user.delete().await()
 
                     // Réinitialiser les états
@@ -457,16 +447,12 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Obtenir le profil utilisateur actuel
     fun getCurrentUserProfile(): UserProfile? = _userProfile.value
 
-    // Vérifier si l'utilisateur est connecté
     fun isUserLoggedIn(): Boolean = _currentUser.value != null
 
-    // Vérifier si l'utilisateur est connecté ET vérifié
     fun isUserLoggedInAndVerified(): Boolean = _currentUser.value != null && _isEmailVerified.value
 
-    // Effacer les erreurs
     fun clearError() {
         _errorMessage.value = null
     }
