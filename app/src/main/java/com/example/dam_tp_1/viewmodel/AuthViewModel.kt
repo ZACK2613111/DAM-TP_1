@@ -464,24 +464,33 @@ class AuthViewModel : ViewModel() {
     }
 
     // Dans AuthViewModel.kt
-    fun logout(onLogoutComplete: () -> Unit) {
+    fun logout(productViewModel: ProductFormViewModel, onLogoutComplete: () -> Unit) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
+                println("🔍 DEBUG: Déconnexion en cours...")
+
                 auth.signOut()
 
                 // Reset states
                 _currentUser.value = null
                 _isEmailVerified.value = false
                 _errorMessage.value = null
+                _userProfile.value = null
 
+                // ✅ EFFACE LES PRODUITS !
+                productViewModel.clearAllData()
+
+                println("🔍 DEBUG: Déconnexion terminée")
                 onLogoutComplete()
             } catch (e: Exception) {
+                println("❌ Erreur déconnexion: ${e.message}")
                 _errorMessage.value = "Erreur lors de la déconnexion: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
         }
     }
+
 
 }

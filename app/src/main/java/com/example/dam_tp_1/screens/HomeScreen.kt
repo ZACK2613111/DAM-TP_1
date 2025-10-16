@@ -202,7 +202,7 @@ fun HomeScreen(
                     userName = currentUser?.displayName ?: "Utilisateur",
                     onConfirm = {
                         showLogoutDialog = false
-                        authViewModel.logout {
+                        authViewModel.logout(viewModel) { // ✅ PASSE LE VIEWMODEL !
                             navController.navigate(Screen.Auth.route) {
                                 popUpTo(0) { inclusive = true }
                             }

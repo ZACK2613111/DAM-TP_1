@@ -171,4 +171,11 @@ class ProductFormViewModel : ViewModel() {
     fun clearError() {
         errorMessage = null
     }
+
+    fun clearAllData() {
+        productsList = emptyList()
+        formData = ProductFormData()
+        errorMessage = null
+        println("🔍 DONNÉES EFFACÉES")
+    }
 }
