@@ -1,12 +1,15 @@
 package com.example.dam_tp_1.components
 
 import android.Manifest
+import android.content.Context
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,12 +18,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.compose.ui.draw.clip
+import coil.compose.AsyncImage
 import com.example.dam_tp_1.model.ProductType
 import java.io.File
 import java.text.SimpleDateFormat
@@ -37,40 +43,53 @@ fun ProductImagePicker(
 ) {
     val context = LocalContext.current
     var showImageDialog by remember { mutableStateOf(false) }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
-    // ✅ PHOTO PICKER - Pas de permissions nécessaires !
+    // ✅ PHOTO PICKER - ANDROID 13+ (PAS DE PERMISSIONS!)
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let {
+            println("✅ Photo Picker: $it")
             onImageSelected(it.toString())
         }
     }
 
-    // ✅ CAMÉRA - Avec permission
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success && imageUri != null) {
-            onImageSelected(imageUri.toString())
+    // ✅ GALLERY PICKER - ANDROID 12 ET MOINS
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            println("✅ Gallery: $it")
+            onImageSelected(it.toString())
         }
     }
 
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            val photoFile = File(
-                context.cacheDir,
-                "photo_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.jpg"
-            )
-            imageUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.provider",
-                photoFile
-            )
-            imageUri?.let { cameraLauncher.launch(it) }
+    // ✅ CAMERA LAUNCHER
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            println("✅ Camera success: $tempCameraUri")
+            onImageSelected(tempCameraUri.toString())
+        } else {
+            println("❌ Camera failed")
+        }
+    }
+
+    // ✅ PERMISSIONS LAUNCHER
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            println("✅ Permissions accordées")
+            launchCamera(context) { uri ->
+                tempCameraUri = uri
+                cameraLauncher.launch(uri)
+            }
+        } else {
+            println("❌ Permissions refusées")
         }
     }
 
@@ -78,7 +97,7 @@ fun ProductImagePicker(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
-        // Preview image (même code que avant)
+        // ✅ PREVIEW IMAGE
         Card(
             modifier = Modifier
                 .size(120.dp)
@@ -95,47 +114,45 @@ fun ProductImagePicker(
                 modifier = Modifier.fillMaxSize()
             ) {
                 if (customImageUri != null) {
-                    // Indicateur image sélectionnée
+                    // Afficher l'image personnalisée
+                    AsyncImage(
+                        model = customImageUri,
+                        contentDescription = "Image personnalisée",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(14.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    // Overlay pour indiquer qu'une image est sélectionnée
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                                selectedType.accentColor.copy(alpha = 0.2f),
+                                selectedType.accentColor.copy(alpha = 0.1f),
                                 RoundedCornerShape(14.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.PhotoCamera,
-                                contentDescription = "Image ajoutée",
-                                tint = selectedType.accentColor,
-                                modifier = Modifier.size(32.dp)
                             )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                "Photo ajoutée",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = selectedType.accentColor,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
+                    )
+
                 } else {
-                    // Image par défaut
+                    // Image par défaut + bouton add
                     Image(
                         painter = painterResource(id = selectedType.imageRes),
                         contentDescription = null,
-                        modifier = Modifier.size(80.dp).padding(8.dp)
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(8.dp)
                     )
 
-                    // Icône add
+                    // Bouton Add en overlay
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.BottomEnd
                     ) {
                         Card(
-                            modifier = Modifier.size(32.dp).offset((-4).dp, (-4).dp),
+                            modifier = Modifier
+                                .size(32.dp)
+                                .offset((-4).dp, (-4).dp),
                             shape = RoundedCornerShape(50),
                             colors = CardDefaults.cardColors(
                                 containerColor = selectedType.accentColor
@@ -182,7 +199,7 @@ fun ProductImagePicker(
         }
     }
 
-    // ✅ DIALOG avec Photo Picker moderne
+    // ✅ DIALOG DE SÉLECTION
     if (showImageDialog) {
         AlertDialog(
             onDismissRequest = { showImageDialog = false },
@@ -195,31 +212,48 @@ fun ProductImagePicker(
             },
             title = { Text("Choisir une image") },
             text = {
-                Column {
-                    // ✅ PHOTO PICKER - Pas de permissions !
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                    // ✅ PHOTO PICKER (ANDROID 13+) OU GALLERY (ANDROID 12-)
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                photoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
                                 showImageDialog = false
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    // Android 13+ - Photo Picker
+                                    photoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                } else {
+                                    // Android 12 et moins - Gallery
+                                    galleryLauncher.launch("image/*")
+                                }
                             },
                         colors = CardDefaults.cardColors(
                             containerColor = selectedType.accentColor.copy(alpha = 0.1f)
-                        )
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.PhotoLibrary, null, tint = selectedType.accentColor)
+                            Icon(
+                                imageVector = Icons.Default.PhotoLibrary,
+                                contentDescription = null,
+                                tint = selectedType.accentColor,
+                                modifier = Modifier.size(28.dp)
+                            )
                             Spacer(Modifier.width(12.dp))
                             Column {
-                                Text("Galerie", fontWeight = FontWeight.Medium)
                                 Text(
-                                    "Sélection sécurisée",
+                                    text = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) "Galerie moderne" else "Galerie",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) "Sélection sécurisée (Android 13+)" else "Accès complet aux images",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                 )
@@ -227,37 +261,58 @@ fun ProductImagePicker(
                         }
                     }
 
-                    Spacer(Modifier.height(8.dp))
-
-                    // Caméra (inchangé)
+                    // ✅ CAMÉRA AVEC PERMISSIONS
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                when (PackageManager.PERMISSION_GRANTED) {
-                                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
-                                        val photoFile = File(
-                                            context.cacheDir,
-                                            "photo_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.jpg"
-                                        )
-                                        imageUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", photoFile)
-                                        imageUri?.let { cameraLauncher.launch(it) }
-                                    }
-                                    else -> cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                }
                                 showImageDialog = false
+
+                                // Vérifier permission caméra
+                                val cameraPermission = ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.CAMERA
+                                )
+
+                                if (cameraPermission == PackageManager.PERMISSION_GRANTED) {
+                                    // Permission déjà accordée
+                                    launchCamera(context) { uri ->
+                                        tempCameraUri = uri
+                                        cameraLauncher.launch(uri)
+                                    }
+                                } else {
+                                    // Demander permission
+                                    permissionsLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+                                }
                             },
                         colors = CardDefaults.cardColors(
                             containerColor = selectedType.accentColor.copy(alpha = 0.1f)
-                        )
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.CameraAlt, null, tint = selectedType.accentColor)
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = null,
+                                tint = selectedType.accentColor,
+                                modifier = Modifier.size(28.dp)
+                            )
                             Spacer(Modifier.width(12.dp))
-                            Text("Appareil photo", fontWeight = FontWeight.Medium)
+                            Column {
+                                Text(
+                                    text = "Appareil photo",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = "Prendre une nouvelle photo",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
                         }
                     }
                 }
@@ -265,9 +320,49 @@ fun ProductImagePicker(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showImageDialog = false }) {
-                    Text("Annuler")
+                    Text("Annuler", color = Color.Gray)
                 }
-            }
+            },
+            shape = RoundedCornerShape(20.dp)
         )
+    }
+}
+
+// ✅ FONCTION HELPER POUR CAMÉRA
+private fun launchCamera(
+    context: Context,
+    onUriCreated: (Uri) -> Unit
+) {
+    try {
+        // Créer un nom unique pour la photo
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val fileName = "IMG_$timeStamp.jpg"
+
+        // Créer le fichier dans Pictures/
+        val picturesDir = File(context.getExternalFilesDir(null), "Pictures")
+        if (!picturesDir.exists()) {
+            picturesDir.mkdirs()
+        }
+
+        val photoFile = File(picturesDir, fileName)
+
+        println("📁 Fichier créé: ${photoFile.absolutePath}")
+
+        // ✅ CRÉER L'URI AVEC FileProvider
+        val authority = "${context.packageName}.fileprovider"
+        val uri = FileProvider.getUriForFile(
+            context,
+            authority,
+            photoFile
+        )
+
+        println("✅ URI créé: $uri")
+        println("✅ Autorité: $authority")
+
+        onUriCreated(uri)
+
+    } catch (e: Exception) {
+        println("❌ Erreur création URI: ${e.message}")
+        e.printStackTrace()
     }
 }
