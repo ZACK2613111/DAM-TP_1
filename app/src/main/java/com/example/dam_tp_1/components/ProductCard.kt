@@ -25,24 +25,31 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.example.dam_tp_1.data.ProductFormData
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductCard(
     product: ProductFormData,
     onClick: () -> Unit,
     onDelete: () -> Unit,
+    onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    var isPressed by remember { mutableStateOf(false) }
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .shadow(6.dp, RoundedCornerShape(20.dp))
-            .clickable {
-                onClick()
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            },
+            .combinedClickable(
+                onClick = {
+                    onClick()
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                },
+                onLongClick = {
+                    onLongPress()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+            ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White

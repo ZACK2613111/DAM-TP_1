@@ -8,7 +8,6 @@ import retrofit2.http.GET
 interface CountriesApiService {
     @GET("all?fields=name,cca2,flags")
     suspend fun getAllCountries(): List<Country>
-
     companion object {
         private const val BASE_URL = "https://restcountries.com/v3.1/"
 

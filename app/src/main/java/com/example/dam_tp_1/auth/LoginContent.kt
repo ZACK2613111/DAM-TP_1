@@ -28,11 +28,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dam_tp_1.ui.theme.*
 import com.example.dam_tp_1.viewmodel.AuthViewModel
+import com.example.dam_tp_1.viewmodel.ProductFormViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun LoginContent(
     viewModel: AuthViewModel,
+    productViewModel: ProductFormViewModel, // ✅ Ajouté
     onLogin: () -> Unit,
     onSwitchToSignup: () -> Unit,
     onBack: () -> Unit
@@ -253,7 +255,18 @@ fun LoginContent(
                 enter = fadeIn(tween(600, delayMillis = 600)) + scaleIn(spring(Spring.DampingRatioMediumBouncy))
             ) {
                 Button(
-                    onClick = { viewModel.loginUser(email, password, onLogin) },
+                    onClick = {
+                        // ✅ Appeler login avec productViewModel
+                        viewModel.login(
+                            email = email,
+                            password = password,
+                            productViewModel = productViewModel,
+                            onSuccess = onLogin,
+                            onError = { error ->
+                                viewModel.setError(error)
+                            }
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth().height(64.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     contentPadding = PaddingValues(0.dp),
@@ -321,4 +334,13 @@ fun LoginContent(
             Spacer(Modifier.height(32.dp))
         }
     }
+}
+
+private fun AuthViewModel.login(
+    email: String,
+    password: String,
+    productViewModel: ProductFormViewModel,
+    onSuccess: () -> Unit,
+    onError: Any
+) {
 }

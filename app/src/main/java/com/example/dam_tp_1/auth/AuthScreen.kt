@@ -17,17 +17,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.navigation.NavController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dam_tp_1.navigation.Screen
 import com.example.dam_tp_1.ui.theme.*
 import com.example.dam_tp_1.viewmodel.AuthViewModel
+import com.example.dam_tp_1.viewmodel.ProductFormViewModel
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel,
+    productViewModel: ProductFormViewModel // ✅ Ajouté
 ) {
     var currentTab by remember { mutableStateOf(AuthTab.Welcome) }
     val haptic = LocalHapticFeedback.current
@@ -76,6 +77,7 @@ fun AuthScreen(
             )
             AuthTab.Login -> LoginContent(
                 viewModel = authViewModel,
+                productViewModel = productViewModel, // ✅ Passé
                 onLogin = {
                     // Si l'utilisateur n'est pas vérifié, passer à l'écran de vérification
                     if (currentUser != null && !isEmailVerified) {
@@ -106,7 +108,6 @@ fun AuthScreen(
                     authViewModel.resetAuthState()
                 }
             )
-            // ✅ NOUVEL ÉCRAN DE VÉRIFICATION EMAIL
             AuthTab.EmailVerification -> EmailVerificationContent(
                 viewModel = authViewModel,
                 onVerificationComplete = {
@@ -202,7 +203,6 @@ fun AuthScreen(
     }
 }
 
-
 enum class AuthTab {
-    Welcome, Login, Signup, EmailVerification // ✅ Ajout du nouvel état
+    Welcome, Login, Signup, EmailVerification
 }

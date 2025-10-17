@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.regex.Pattern
 
-// Modèle utilisateur pour Firestore
 data class UserProfile(
     val id: String = "",
     val nom: String = "",
@@ -23,7 +22,6 @@ data class UserProfile(
     val updatedAt: Long = System.currentTimeMillis()
 )
 
-// Sealed class pour gérer les états de résultat
 sealed class AuthResult {
     object Loading : AuthResult()
     data class Success(val user: FirebaseUser?) : AuthResult()
@@ -457,7 +455,6 @@ class AuthViewModel : ViewModel() {
         _errorMessage.value = null
     }
 
-    // Réinitialiser l'état d'authentification
     fun resetAuthState() {
         _authResult.value = AuthResult.Idle
         clearError()

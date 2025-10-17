@@ -1,6 +1,7 @@
 package com.example.dam_tp_1.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -171,6 +173,10 @@ fun HomeScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             },
                             onProductDelete = { showDeleteDialog = it },
+                            onProductLongPress = {
+                                showDeleteDialog = it
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            },
                             onPageChange = { newPage ->
                                 currentPage = newPage
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -180,7 +186,6 @@ fun HomeScreen(
                 }
             }
 
-            // Delete Dialog
             showDeleteDialog?.let { product ->
                 DeleteProductDialog(
                     product = product,
@@ -202,7 +207,7 @@ fun HomeScreen(
                     userName = currentUser?.displayName ?: "Utilisateur",
                     onConfirm = {
                         showLogoutDialog = false
-                        authViewModel.logout(viewModel) { // ✅ PASSE LE VIEWMODEL !
+                        authViewModel.logout(viewModel) {
                             navController.navigate(Screen.Auth.route) {
                                 popUpTo(0) { inclusive = true }
                             }

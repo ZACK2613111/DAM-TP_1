@@ -31,6 +31,7 @@ fun ProductList(
     showStats: Boolean,
     onProductClick: (Int) -> Unit,
     onProductDelete: (ProductFormData) -> Unit,
+    onProductLongPress: (ProductFormData) -> Unit,
     onPageChange: (Int) -> Unit
 ) {
     LazyColumn(
@@ -52,7 +53,8 @@ fun ProductList(
             ProductCard(
                 product = product,
                 onClick = { onProductClick(index) },
-                onDelete = { onProductDelete(product) }
+                onDelete = { onProductDelete(product) },
+                onLongPress = { onProductLongPress(product) }
             )
         }
 

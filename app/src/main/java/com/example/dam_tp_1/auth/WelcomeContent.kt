@@ -26,6 +26,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun WelcomeContent(onGetStarted: () -> Unit) {
     var isVisible by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
         delay(200)
@@ -40,6 +41,7 @@ fun WelcomeContent(onGetStarted: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -138,9 +140,7 @@ fun WelcomeContent(onGetStarted: () -> Unit) {
                 }
             }
 
-            Spacer(Modifier.weight(1f))
-            Spacer(Modifier.height(24.dp))  // ✅ Espace supplémentaire
-
+            Spacer(Modifier.height(48.dp))
 
             // === BOUTON COMMENCER MODERNE ===
             AnimatedVisibility(
@@ -157,7 +157,7 @@ fun WelcomeContent(onGetStarted: () -> Unit) {
                         onClick = onGetStarted,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp),  // Plus grand pour impact
+                            .height(64.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent
                         ),
@@ -220,7 +220,6 @@ fun WelcomeContent(onGetStarted: () -> Unit) {
                     )
                 }
             }
-
 
             Spacer(Modifier.height(32.dp))
 

@@ -97,7 +97,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
 
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
-    data object Onboarding : Screen("onboarding") // ✅ NOUVEAU!
+    data object Onboarding : Screen("onboarding")
     data object Auth : Screen("auth")
     data object Home : Screen("home")
     data object ProductDetail : Screen("product_detail/{productId}") {

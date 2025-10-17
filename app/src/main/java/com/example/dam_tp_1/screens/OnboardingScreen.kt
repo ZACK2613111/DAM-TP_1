@@ -184,9 +184,12 @@ fun OnboardingScreen(
 
 @Composable
 fun OnboardingPageContent(page: OnboardingPage) {
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
             .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
