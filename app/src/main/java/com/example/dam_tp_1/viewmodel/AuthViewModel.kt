@@ -71,6 +71,11 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    // ✅ NOUVELLE FONCTION setError
+    fun setError(message: String) {
+        _errorMessage.value = message
+    }
+
     // Fonctions de validation
     fun validateEmail(email: String): Boolean = emailRegex.matcher(email).matches()
 
@@ -146,7 +151,7 @@ class AuthViewModel : ViewModel() {
                     }
 
                     _authResult.value = AuthResult.Success(user)
-                    clearError() // Effacer les erreurs précédentes
+                    clearError()
                     onSuccess()
                 } else {
                     _authResult.value = AuthResult.Error("Erreur lors de la création du compte")
@@ -171,7 +176,99 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Connexion utilisateur - MISE À JOUR
+    // ✅ NOUVELLE FONCTION login avec ProductFormViewModel
+    fun login(
+        email: String,
+        password: String,
+        productViewModel: ProductFormViewModel,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        if (email.isBlank() || password.isBlank()) {
+            onError("Veuillez remplir tous les champs")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _authResult.value = AuthResult.Loading
+                _isLoading.value = true
+
+                println("🔍 DEBUG: Tentative de connexion - $email")
+
+                val authResult = auth.signInWithEmailAndPassword(email, password).await()
+                val user = authResult.user
+
+                if (user != null) {
+                    println("🔍 DEBUG: Connexion réussie - ${user.uid}")
+
+                    // Toujours mettre à jour l'utilisateur actuel d'abord
+                    _currentUser.value = user
+
+                    // Recharger les informations utilisateur depuis Firebase
+                    user.reload().await()
+
+                    if (user.isEmailVerified) {
+                        println("🔍 DEBUG: Email vérifié - connexion autorisée")
+                        _isEmailVerified.value = true
+
+                        // ✅ CHARGER LE PROFIL UTILISATEUR
+                        loadUserProfile(user.uid)
+
+                        // ✅ CHARGER LES PRODUITS APRÈS LE LOGIN
+                        productViewModel.loadUserProducts()
+
+                        _authResult.value = AuthResult.Success(user)
+                        clearError()
+                        onSuccess()
+                    } else {
+                        println("🔍 DEBUG: Email non vérifié")
+                        _isEmailVerified.value = false
+                        _authResult.value = AuthResult.Error("Email non vérifié")
+
+                        val errorMsg = "Veuillez vérifier votre adresse e-mail avant de vous connecter. Vérifiez votre boîte de réception ou vos spams."
+                        _errorMessage.value = errorMsg
+                        onError(errorMsg)
+
+                        // Renvoyer automatiquement un email de vérification
+                        try {
+                            user.sendEmailVerification().await()
+                            println("🔍 DEBUG: Nouvel email de vérification envoyé")
+                            _errorMessage.value = errorMsg + "\n\nUn nouvel email de vérification a été envoyé."
+                        } catch (e: Exception) {
+                            println("🔍 DEBUG: Erreur renvoi email: ${e.message}")
+                        }
+                    }
+                } else {
+                    val errorMsg = "Erreur de connexion"
+                    _authResult.value = AuthResult.Error(errorMsg)
+                    _errorMessage.value = errorMsg
+                    onError(errorMsg)
+                }
+            } catch (e: Exception) {
+                println("🔍 DEBUG: Erreur de connexion: ${e.message}")
+
+                val errorMessage = when {
+                    e.message?.contains("invalid-email") == true -> "Adresse email invalide"
+                    e.message?.contains("user-disabled") == true -> "Ce compte a été désactivé"
+                    e.message?.contains("user-not-found") == true -> "Aucun compte trouvé avec cette adresse email"
+                    e.message?.contains("wrong-password") == true -> "Mot de passe incorrect"
+                    e.message?.contains("invalid-credential") == true -> "Email ou mot de passe incorrect"
+                    e.message?.contains("too-many-requests") == true -> "Trop de tentatives. Réessayez plus tard"
+                    e.message?.contains("network-request-failed") == true -> "Erreur de connexion réseau"
+                    else -> e.message ?: "Erreur de connexion inconnue"
+                }
+
+                _authResult.value = AuthResult.Error(errorMessage)
+                _errorMessage.value = errorMessage
+                onError(errorMessage)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // ✅ ANCIENNE FONCTION loginUser (gardée pour compatibilité)
     fun loginUser(
         email: String,
         password: String,
@@ -190,10 +287,7 @@ class AuthViewModel : ViewModel() {
                 if (user != null) {
                     println("🔍 DEBUG: Connexion réussie - ${user.uid}")
 
-                    // ✅ Toujours mettre à jour l'utilisateur actuel d'abord
                     _currentUser.value = user
-
-                    // Recharger les informations utilisateur depuis Firebase
                     user.reload().await()
 
                     if (user.isEmailVerified) {
@@ -201,7 +295,7 @@ class AuthViewModel : ViewModel() {
                         _isEmailVerified.value = true
                         loadUserProfile(user.uid)
                         _authResult.value = AuthResult.Success(user)
-                        clearError() // Effacer toute erreur précédente
+                        clearError()
                         onSuccess()
                     } else {
                         println("🔍 DEBUG: Email non vérifié")
@@ -209,7 +303,6 @@ class AuthViewModel : ViewModel() {
                         _authResult.value = AuthResult.Error("Email non vérifié")
                         _errorMessage.value = "Veuillez vérifier votre adresse e-mail avant de vous connecter. Vérifiez votre boîte de réception ou vos spams."
 
-                        // ✅ Optionnel: Renvoyer automatiquement un email de vérification
                         try {
                             user.sendEmailVerification().await()
                             println("🔍 DEBUG: Nouvel email de vérification envoyé")
@@ -225,7 +318,6 @@ class AuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 println("🔍 DEBUG: Erreur de connexion: ${e.message}")
 
-                // ✅ Messages d'erreur plus précis
                 val errorMessage = when {
                     e.message?.contains("invalid-email") == true -> "Adresse email invalide"
                     e.message?.contains("user-disabled") == true -> "Ce compte a été désactivé"
@@ -252,7 +344,6 @@ class AuthViewModel : ViewModel() {
                 if (user != null) {
                     println("🔍 DEBUG: Rafraîchissement du statut de vérification email")
 
-                    // Recharger les informations utilisateur depuis Firebase
                     user.reload().await()
 
                     val isVerified = user.isEmailVerified
@@ -262,7 +353,6 @@ class AuthViewModel : ViewModel() {
                     _currentUser.value = user
 
                     if (isVerified) {
-                        // Si l'email est maintenant vérifié, charger le profil et marquer comme succès
                         loadUserProfile(user.uid)
                         _authResult.value = AuthResult.Success(user)
                         clearError()
@@ -284,7 +374,6 @@ class AuthViewModel : ViewModel() {
         refreshEmailVerificationStatus()
     }
 
-    // Déconnexion
     fun signOut() {
         try {
             println("🔍 DEBUG: Déconnexion utilisateur")
@@ -298,6 +387,36 @@ class AuthViewModel : ViewModel() {
         } catch (e: Exception) {
             println("🔍 DEBUG: Erreur lors de la déconnexion: ${e.message}")
             _errorMessage.value = "Erreur lors de la déconnexion: ${e.message}"
+        }
+    }
+
+    // ✅ FONCTION logout avec ProductFormViewModel
+    fun logout(productViewModel: ProductFormViewModel, onLogoutComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                println("🔍 DEBUG: Déconnexion en cours...")
+
+                // ✅ EFFACE LES PRODUITS AVANT DE SE DÉCONNECTER
+                productViewModel.clearAllData()
+
+                auth.signOut()
+
+                // Reset states
+                _currentUser.value = null
+                _isEmailVerified.value = false
+                _errorMessage.value = null
+                _userProfile.value = null
+                _authResult.value = AuthResult.Idle
+
+                println("🔍 DEBUG: Déconnexion terminée")
+                onLogoutComplete()
+            } catch (e: Exception) {
+                println("❌ Erreur déconnexion: ${e.message}")
+                _errorMessage.value = "Erreur lors de la déconnexion: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
@@ -426,7 +545,6 @@ class AuthViewModel : ViewModel() {
                     _isLoading.value = true
 
                     firestore.collection("users").document(userId).delete().await()
-
                     user.delete().await()
 
                     // Réinitialiser les états
@@ -459,35 +577,4 @@ class AuthViewModel : ViewModel() {
         _authResult.value = AuthResult.Idle
         clearError()
     }
-
-    // Dans AuthViewModel.kt
-    fun logout(productViewModel: ProductFormViewModel, onLogoutComplete: () -> Unit) {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                println("🔍 DEBUG: Déconnexion en cours...")
-
-                auth.signOut()
-
-                // Reset states
-                _currentUser.value = null
-                _isEmailVerified.value = false
-                _errorMessage.value = null
-                _userProfile.value = null
-
-                // ✅ EFFACE LES PRODUITS !
-                productViewModel.clearAllData()
-
-                println("🔍 DEBUG: Déconnexion terminée")
-                onLogoutComplete()
-            } catch (e: Exception) {
-                println("❌ Erreur déconnexion: ${e.message}")
-                _errorMessage.value = "Erreur lors de la déconnexion: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-
 }

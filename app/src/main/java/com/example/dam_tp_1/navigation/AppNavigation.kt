@@ -53,19 +53,26 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             SplashScreen(navController)
         }
 
-        // ✅ ONBOARDING SCREEN (NOUVEAU!)
+        // ✅ ONBOARDING SCREEN
         composable(Screen.Onboarding.route) {
             OnboardingScreen(navController)
         }
 
+        // ✅ AUTH SCREEN - AJOUT DU PRODUCTVIEWMODEL
         composable(Screen.Auth.route) {
-            AuthScreen(navController, authViewModel)
+            AuthScreen(
+                navController = navController,
+                authViewModel = authViewModel,
+                productViewModel = sharedViewModel // ✅ Passé ici
+            )
         }
 
+        // ✅ HOME SCREEN
         composable(Screen.Home.route) {
             HomeScreen(navController, sharedViewModel, authViewModel)
         }
 
+        // ✅ PRODUCT DETAIL
         composable(
             route = Screen.ProductDetail.route,
             arguments = listOf(navArgument("productId") {
@@ -77,18 +84,22 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             ProductDetailScreen(navController, sharedViewModel, productId)
         }
 
+        // ✅ STEP 1
         composable(Screen.Step1.route) {
             Step1Screen(navController, sharedViewModel)
         }
 
+        // ✅ STEP 2
         composable(Screen.Step2.route) {
             Step2Screen(navController, sharedViewModel)
         }
 
+        // ✅ STEP 3
         composable(Screen.Step3.route) {
             Step3Screen(navController, sharedViewModel)
         }
 
+        // ✅ SUMMARY
         composable(Screen.Summary.route) {
             SummaryScreen(navController, sharedViewModel)
         }
